@@ -395,36 +395,6 @@ input[type='search'] {
   }
 }
 
-// The action that turns a bed from owing to paid. It appears once per
-// unpaid tenant, so on a full board there can be a dozen of them at once —
-// a dozen solid gold blocks was most of why the page looked like a warning
-// sign. Outlined at rest, solid green under the pointer.
-.btn-money {
-  background: $surface;
-  border-color: $occupied-line;
-  color: $occupied;
-
-  .ic {
-    color: $occupied;
-    transition: color $speed $ease;
-  }
-
-  &:hover:not(:disabled) {
-    background: $occupied;
-    border-color: $occupied;
-    color: #fff;
-    box-shadow: 0 4px 12px rgba(15, 138, 95, 0.24);
-
-    .ic {
-      color: #fff;
-    }
-  }
-
-  &:focus-visible {
-    box-shadow: 0 0 0 3px rgba(15, 138, 95, 0.22);
-  }
-}
-
 .btn-soft {
   background: $navy-tint;
   border-color: transparent;

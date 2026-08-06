@@ -59,33 +59,22 @@ $danger-tint: #fdecea;
 // =============================================================
 //  Status colour code — one meaning per colour, on every screen
 //
-//  INDIGO  vacant / empty bed · a bed you can fill
+//  ORANGE  vacant / empty bed        · and it blinks, everywhere
 //  GREEN   occupied · receipt sent   · money in
 //  RED     rent due · expense · loss · money out or missing
-//  SLATE   rooms, structure, anything with no status of its own
-//  NAVY    neutral figure, brand
+//  NAVY    neutral figure, structure
+//  VIOLET  hall — the shared common room
 //  GOLD    brand accent, "everything full"
-//
-//  Four working colours, not ten. Rooms used to cycle through four hues
-//  and the hall had a fifth; a flat card was a paint chart, and orange —
-//  on every empty bed, every edge, every chip — drowned the two colours
-//  that were actually about money. Rooms are told apart by their labels
-//  and their rules now, and the only saturated things left on a card are
-//  the four states above.
 // =============================================================
 
-// ---- Vacant: a bed going spare ----
-// Indigo sits in the same cool family as the brand navy, so a wall of
-// empty beds reads as calm structure rather than a hazard stripe — and it
-// can never be mistaken for the red that means the money is missing.
-$vacant: #5b5bd6;
-$vacant-strong: #4a48c4;
-$vacant-deep: #38369c;
-$vacant-tint: #f2f2fe;
-$vacant-tint-2: #e4e4fc;
-$vacant-line: rgba(91, 91, 214, 0.34);
-$vacant-soft: rgba(91, 91, 214, 0.14);
-$vacant-glow: rgba(91, 91, 214, 0.22);
+// ---- Vacant: the one colour that blinks ----
+$vacant: #ea580c;
+$vacant-strong: #c2410c;
+$vacant-deep: #9a3412;
+$vacant-tint: #fff4ec;
+$vacant-tint-2: #ffe3d0;
+$vacant-line: rgba(234, 88, 12, 0.42);
+$vacant-glow: rgba(234, 88, 12, 0.26);
 
 // ---- Occupied / paid ----
 $occupied: #0f8a5f;
@@ -97,24 +86,27 @@ $due: #c62a1f;
 $due-tint: #fdecea;
 $due-line: rgba(198, 42, 31, 0.3);
 
-// ---- Rooms ----
-// One slate for every room, hall included. A room is not a status, so it
-// does not get a status colour; the hall is told apart by its band, its
-// label and its icon, which is what people actually read.
-$room: #55637b;
-$room-tint: #eef1f6;
-
-// Violet is no longer a room colour. It survives as a plain accent for the
-// odd section icon that needs to not be navy.
+// ---- Room types ----
+// Hall is deliberately a different family from every bedroom, because it is
+// a different kind of room: shared, and usually the one with beds left.
 $hall: #7c3aed;
 $hall-strong: #6127c9;
 $hall-tint: #f3ecff;
 $hall-line: rgba(124, 58, 237, 0.3);
 
+$bed-1: #2563eb;
+$bed-1-tint: #e8f0fe;
+$bed-2: #0d9488;
+$bed-2-tint: #e0f5f2;
+$bed-3: #db2777;
+$bed-3-tint: #fdeaf3;
+$bed-4: #475569;
+$bed-4-tint: #eef2f7;
+
 // ---- Gradients ----
 $grad-primary: linear-gradient(135deg, #1c3f6e 0%, #3572c4 100%);
 $grad-gold: linear-gradient(135deg, #d08e1c 0%, #eaa93c 52%, #f8cd76 100%);
-$grad-vacant: linear-gradient(135deg, #38369c 0%, #5b5bd6 55%, #8f8ff0 100%);
+$grad-vacant: linear-gradient(135deg, #c2410c 0%, #ea580c 55%, #fb923c 100%);
 $grad-green: linear-gradient(135deg, #0a6f4c 0%, #0f8a5f 55%, #2bb583 100%);
 $grad-red: linear-gradient(135deg, #9b1c14 0%, #c62a1f 55%, #e35349 100%);
 $grad-hall: linear-gradient(135deg, #5b21b6 0%, #7c3aed 55%, #a78bfa 100%);
