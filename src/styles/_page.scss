@@ -751,12 +751,62 @@ tfoot td {
         margin-right: auto;
       }
     }
+
+    // Nothing is pinned once the table is a stack of cards, and a sticky
+    // header with no scrollport of its own lands in the middle of the page.
+    thead th,
+    tfoot td {
+      position: static;
+    }
   }
 
   // Stacked rows are their own cards; scrolling them inside a frame as
   // well would be a box inside a box.
   .table-wrap.stacked.scroll {
     overflow: visible;
+    max-height: none;
+  }
+}
+
+// ===============================================================
+//  Phones and small tablets: the page is the only thing that scrolls
+//
+//  A frame that scrolls inside a card is right with a mouse — the wheel is
+//  over one box at a time and the rest of the page is beside it. On a phone
+//  the card fills the screen, so nearly every swipe starts inside the frame
+//  and `overscroll-behavior: contain` then refuses to pass the gesture on:
+//  the list moves 200px, hits its end, and the page under it stays put. It
+//  reads as the screen having seized up.
+//
+//  So below 900px every inner frame is released. Lists simply run down the
+//  page and one swipe moves the one thing the thumb is on.
+// ===============================================================
+@media (max-width: 900px) {
+  .scroll-y {
+    max-height: none;
+    overflow: visible;
+    overscroll-behavior: auto;
+    padding-right: 0;
+    margin-right: 0;
+    // The scroll shadows mean "there is more past this edge". With no
+    // frame there is no edge, and they would just be smudges.
+    background: none;
+  }
+
+  // Same reason: nothing is cut off any more, so nothing needs saying.
+  .scroll-note {
+    display: none;
+  }
+
+  .table-wrap.scroll {
+    max-height: none;
+    overflow-x: auto;
+    overflow-y: hidden;
+
+    thead th,
+    tfoot td {
+      position: static;
+    }
   }
 }
 
@@ -773,71 +823,25 @@ tfoot td {
     grid-column: span 1;
   }
 
+  // The heading and its buttons stop competing for one line: the title
+  // takes the width it needs and the tools get a full row underneath.
   .page-head {
+    flex-direction: column;
     align-items: stretch;
+    gap: 14px;
 
     > .btn {
       width: 100%;
     }
   }
 
+  .head-tools {
+    width: 100%;
+  }
+
   .key {
     font-size: 11.5px;
     gap: 6px 12px;
-  }
-
-  // Shorter frames on a phone: the viewport is the scarce thing there.
-  .scroll-y {
-    --h: 300px;
-
-    &.scroll-sm {
-      --h: 230px;
-    }
-
-    &.scroll-lg {
-      --h: 360px;
-    }
-  }
-}
-
-// ---- Modals on a phone: a sheet off the bottom, easier to reach ----
-@media (max-width: 560px) {
-  .backdrop {
-    padding: 0;
-    place-items: end stretch;
-  }
-
-  .modal {
-    max-width: none;
-    border-radius: $radius-lg $radius-lg 0 0;
-    padding: 22px 18px calc(22px + env(safe-area-inset-bottom));
-    max-height: 92dvh;
-    overflow-y: auto;
-    animation: sheet 0.28s $ease both;
-  }
-
-  // The grab handle every phone sheet has.
-  .modal::after {
-    content: '';
-    position: absolute;
-    top: 9px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 38px;
-    height: 4px;
-    border-radius: $radius-pill;
-    background: rgba(11, 18, 32, 0.16);
-  }
-
-  .actions .btn {
-    flex: 1 1 140px;
-  }
-}
-
-@keyframes sheet {
-  from {
-    opacity: 0;
-    transform: translateY(28px);
   }
 }
 
@@ -942,5 +946,91 @@ tfoot td {
   from {
     opacity: 0;
     transform: translateY(14px) scale(0.97);
+  }
+}
+
+// ---- Modals on a phone: a sheet off the bottom, easier to reach ----
+@media (max-width: 560px) {
+  .backdrop {
+    padding: 0;
+    place-items: end stretch;
+    // One scroller, not two. The sheet scrolls; the layer holding it does
+    // not, so a swipe inside a long form cannot drag the whole sheet about.
+    overflow: hidden;
+  }
+
+  .modal {
+    max-width: none;
+    border-radius: $radius-lg $radius-lg 0 0;
+    padding: 27px 18px calc(20px + env(safe-area-inset-bottom));
+    max-height: 92dvh;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    animation: sheet 0.28s $ease both;
+  }
+
+  // The grab handle every phone sheet has.
+  .modal::after {
+    content: '';
+    position: absolute;
+    top: 9px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 38px;
+    height: 4px;
+    border-radius: $radius-pill;
+    background: rgba(11, 18, 32, 0.16);
+  }
+
+  // Save stays on screen. A form with six fields and a rooms editor is
+  // taller than a phone, and hunting for the button at the bottom of a
+  // scroll is the slowest part of adding a tenant.
+  .modal .actions {
+    position: sticky;
+    bottom: 0;
+    z-index: 2;
+    margin-inline: -18px;
+    padding: 12px 18px 2px;
+    background: $surface;
+    box-shadow: 0 -1px 0 $line;
+  }
+
+  .actions .btn {
+    flex: 1 1 140px;
+    padding-block: 14px;
+  }
+}
+
+// ===============================================================
+//  Touch
+//
+//  A finger is about 9mm across, it has no hover, and it flashes a grey
+//  box on every tap unless told otherwise. These rules are keyed off the
+//  input device, so the desk console is untouched by them.
+// ===============================================================
+@media (hover: none) {
+  // Small text buttons — edit, remove, remind, CSV — are the ones a thumb
+  // misses. Same look, a target you can actually hit.
+  .link {
+    min-height: 40px;
+    padding-inline: 11px;
+  }
+
+  .x {
+    width: 42px;
+    height: 42px;
+  }
+
+  // Nothing lifts towards a pointer that is not there — and a tap was
+  // leaving the lift behind.
+  .chip:hover {
+    transform: none;
+  }
+}
+
+@keyframes sheet {
+  from {
+    opacity: 0;
+    transform: translateY(28px);
   }
 }

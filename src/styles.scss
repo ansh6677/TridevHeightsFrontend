@@ -20,6 +20,24 @@ body {
 
 html {
   scroll-behavior: smooth;
+  // A phone in landscape, or a wide table inside a card, must never make
+  // the whole page rock sideways.
+  overflow-x: hidden;
+  // Stops the rubber-band bounce of the page dragging the address bar
+  // around while a sheet is open.
+  overscroll-behavior-y: none;
+}
+
+// Set while a sheet or the drawer is open. `overflow: hidden` alone is not
+// enough on iOS — only a fixed body actually holds still — so the code that
+// adds this class stores the scroll position and puts it back on removal.
+// See core/scroll-lock.ts.
+body.locked {
+  position: fixed;
+  left: 0;
+  right: 0;
+  width: 100%;
+  overflow: hidden;
 }
 
 // A flat field looks like paper; two very faint colour washes give the page
@@ -40,8 +58,44 @@ body {
   font-feature-settings: 'cv02', 'cv03', 'cv04', 'ss01';
 }
 
+// A phone repaints a fixed background on every scroll frame, and these two
+// washes are decoration. Smooth scrolling is not.
+@media (max-width: 900px) {
+  body {
+    background-attachment: scroll;
+  }
+}
+
 ::selection {
   background: rgba(230, 162, 51, 0.28);
+}
+
+// ---------------------------------------------------------------
+//  Touch behaviour
+//
+//  Three things every tappable thing on a phone needs: no grey flash box,
+//  no 300ms wait while the browser decides whether the tap was a double
+//  tap, and no accidental text selection when a press is held.
+// ---------------------------------------------------------------
+button,
+a,
+[role='button'],
+input,
+select,
+textarea,
+label {
+  -webkit-tap-highlight-color: transparent;
+}
+
+button,
+a,
+[role='button'] {
+  touch-action: manipulation;
+}
+
+button {
+  -webkit-user-select: none;
+  user-select: none;
 }
 
 // A scrollbar in the brand's colours rather than the browser's default grey.
@@ -150,6 +204,18 @@ textarea {
     background: $surface-3;
     color: $muted;
     box-shadow: none;
+  }
+}
+
+// iOS zooms the entire page in when a field it focuses has text under 16px,
+// and it does not zoom back out afterwards — the page is left oversized and
+// scrolled sideways, which is most of what "the mobile UI breaks when I tap
+// a box" turns out to be. 16px is the price of that not happening.
+@media (max-width: 900px) {
+  input,
+  select,
+  textarea {
+    font-size: 16px;
   }
 }
 
@@ -371,6 +437,21 @@ input[type='search'] {
   width: 38px;
   height: 38px;
   flex: none;
+}
+
+// A small button is small because a pointer is precise. A thumb is not, so
+// on a touch screen the padding comes back. This lives here rather than in
+// page.scss because page.scss is emitted first — a plain rule after a media
+// query wins at equal specificity, and .btn-sm below would undo it.
+@media (hover: none) {
+  .btn-sm {
+    padding: 11px 15px;
+  }
+
+  .btn-icon {
+    width: 44px;
+    height: 44px;
+  }
 }
 
 // ---------------------------------------------------------------

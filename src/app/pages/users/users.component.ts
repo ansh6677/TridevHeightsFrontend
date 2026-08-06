@@ -1,9 +1,10 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, DestroyRef, effect, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ApiService } from '../../core/api.service';
 import { AuthService } from '../../core/auth.service';
 import { errorText } from '../../core/error-text';
+import { lockScroll } from '../../core/scroll-lock';
 import { IconComponent } from '../../shared/icon.component';
 import { DeskUser, ROLE_ADMIN, ROLE_VIEWER } from '../../core/models';
 
@@ -33,6 +34,10 @@ export class UsersComponent {
 
   constructor() {
     this.load();
+
+    // The page behind the sheet stays where it was.
+    effect(() => lockScroll(this, this.sheetOpen()));
+    inject(DestroyRef).onDestroy(() => lockScroll(this, false));
   }
 
   async load(): Promise<void> {

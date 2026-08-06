@@ -1,10 +1,20 @@
 @use '../../../styles/variables' as *;
 
+// Defined once, and above the media queries below: a plain rule that comes
+// after a media query outranks it at equal specificity, which is how the
+// phone layout for this row was being quietly undone.
 .head-tools {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: 9px;
+  gap: 10px;
+}
+
+.head-links {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex-wrap: wrap;
 }
 
 .spans {
@@ -779,6 +789,31 @@
   border-radius: $radius-sm;
 }
 
+// A phone has no pointer, so nothing here may depend on one: the arrow on a
+// quick action is shown outright, and the tiles stop lifting towards a
+// cursor that does not exist — a tap was leaving them lifted.
+@media (hover: none) {
+  .qa-go {
+    opacity: 0.7;
+    transform: none;
+  }
+
+  .qa:hover,
+  .kpi:hover {
+    transform: none;
+    box-shadow: $shadow-sm;
+  }
+
+  .qa:active {
+    transform: scale(0.99);
+    box-shadow: $shadow-xs;
+  }
+
+  .col:hover {
+    background: transparent;
+  }
+}
+
 @media (max-width: 620px) {
   .chart {
     min-height: 180px;
@@ -793,32 +828,63 @@
     display: none;
   }
 
+  // The month picker gets its own line — it is the control that decides what
+  // every figure on the screen means — and the buttons share the next.
   .head-tools {
     width: 100%;
-    justify-content: space-between;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+
+    .month-pick {
+      grid-column: 1 / -1;
+      width: 100%;
+      min-width: 0;
+    }
+
+    .btn,
+    .refresh {
+      width: 100%;
+      justify-content: center;
+    }
   }
 
   .vac-value {
     font-size: 34px;
   }
 
+  // The card asks you to go and fill the beds; the button that does it
+  // should not be a sliver in the corner.
   .vacancy {
     gap: 12px;
+
+    .btn {
+      width: 100%;
+      justify-content: center;
+      padding-block: 13px;
+    }
   }
-}
 
-.head-tools {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
-}
+  // The panes no longer hold a fixed-height scroll frame on a phone, so a
+  // floor of 420px would only pad short lists out with white space.
+  .two-col > .pane {
+    min-height: 0;
+  }
 
-.head-links {
-  display: flex;
-  align-items: center;
-  gap: 2px;
-  flex-wrap: wrap;
+  .two-col {
+    gap: 14px;
+  }
+
+  // Twelve months still will not fit, so this one keeps its sideways
+  // scroll — sideways does not fight the thumb's up-and-down.
+  .chart-scroll {
+    scroll-snap-type: x proximity;
+    overscroll-behavior-x: contain;
+  }
+
+  .col {
+    scroll-snap-align: center;
+  }
 }
 
 tbody tr.current {
@@ -826,6 +892,14 @@ tbody tr.current {
 
   &:hover {
     background: rgba(230, 162, 51, 0.18);
+  }
+}
+
+// The month you are looking at keeps its gold once each row is its own card.
+@media (max-width: 760px) {
+  .table-wrap.stacked tbody tr.current {
+    background: $gold-tint;
+    border-left-color: $gold;
   }
 }
 

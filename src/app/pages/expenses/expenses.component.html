@@ -141,8 +141,10 @@
       </div>
     } @else {
       <!-- Header and total stay pinned; the entries scroll between them, so
-           the card is the same height at three entries and at three hundred. -->
-      <div class="table-wrap scroll">
+           the card is the same height at three entries and at three hundred.
+           On a phone each entry becomes its own card instead — a five column
+           table on a 360px screen is a sideways scroll and a guessing game. -->
+      <div class="table-wrap stacked scroll">
         <table class="slim">
           <thead>
             <tr>
@@ -156,10 +158,14 @@
           <tbody>
             @for (e of expenses(); track e.id) {
               <tr>
-                <td class="muted nowrap">{{ e.expenseDate | date: 'dd MMM yy' }}</td>
-                <td class="strong">{{ e.remark }}</td>
-                <td><span class="pill pill-payer">{{ e.paidBy }}</span></td>
-                <td class="num strong out">Rs. {{ e.amount | number: '1.0-0' }}</td>
+                <td class="muted nowrap" data-label="Date">
+                  {{ e.expenseDate | date: 'dd MMM yy' }}
+                </td>
+                <td class="strong" data-label="Remark">{{ e.remark }}</td>
+                <td data-label="Paid by"><span class="pill pill-payer">{{ e.paidBy }}</span></td>
+                <td class="num strong out" data-label="Amount">
+                  Rs. {{ e.amount | number: '1.0-0' }}
+                </td>
                 <td class="row-actions">
                   @if (auth.isAdmin()) {
                     <button type="button" class="link danger" title="Delete this entry"
@@ -174,8 +180,8 @@
           </tbody>
           <tfoot>
             <tr>
-              <td colspan="3" class="strong">Total</td>
-              <td class="num strong">Rs. {{ total() | number: '1.0-0' }}</td>
+              <td colspan="3" class="strong" data-label="All entries">Total</td>
+              <td class="num strong" data-label="Amount">Rs. {{ total() | number: '1.0-0' }}</td>
               <td></td>
             </tr>
           </tfoot>

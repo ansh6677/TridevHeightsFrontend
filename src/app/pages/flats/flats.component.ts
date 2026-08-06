@@ -1,10 +1,11 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, DestroyRef, effect, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ApiService } from '../../core/api.service';
 import { AuthService } from '../../core/auth.service';
 import { csvName, downloadCsv } from '../../core/csv';
 import { errorText } from '../../core/error-text';
+import { lockScroll } from '../../core/scroll-lock';
 import { IconComponent } from '../../shared/icon.component';
 import {
   FlatCard, isHallRoom, Occupant, PAYMENT_MODES, ROOM_SUGGESTIONS, RoomSpec, RoomView
@@ -135,6 +136,12 @@ export class FlatsComponent {
 
   constructor() {
     this.load();
+
+    // A sheet on a phone covers the page. Hold the page still underneath it,
+    // or a swipe in the form scrolls the flats behind and you come back to a
+    // list that has moved.
+    effect(() => lockScroll(this, this.sheet() !== null));
+    inject(DestroyRef).onDestroy(() => lockScroll(this, false));
   }
 
   async load(): Promise<void> {

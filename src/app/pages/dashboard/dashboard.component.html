@@ -293,9 +293,10 @@
         </span>
       </div>
 
-      <!-- Scrolls in place with the header pinned: twelve months of rows no
-           longer stretch the card down the page. -->
-      <div class="table-wrap scroll">
+      <!-- Scrolls in place with the header pinned on a desk; on a phone each
+           month becomes its own little card with the column names printed
+           beside the figures, so nothing scrolls sideways. -->
+      <div class="table-wrap stacked scroll">
         <table>
           <thead>
             <tr>
@@ -308,15 +309,17 @@
           <tbody>
             @for (m of d.months; track m.month) {
               <tr [class.current]="m.month === d.month">
-                <td class="strong nowrap">
+                <td class="strong nowrap" data-label="Month">
                   {{ m.label }}
                   @if (m.month === d.month) {
                     <span class="pill pill-now">this month</span>
                   }
                 </td>
-                <td class="num good">Rs. {{ m.collected | number: '1.0-0' }}</td>
-                <td class="num">Rs. {{ m.expense | number: '1.0-0' }}</td>
-                <td class="num strong" [class.bad]="m.net < 0">
+                <td class="num good" data-label="Collected">
+                  Rs. {{ m.collected | number: '1.0-0' }}
+                </td>
+                <td class="num" data-label="Expenses">Rs. {{ m.expense | number: '1.0-0' }}</td>
+                <td class="num strong" [class.bad]="m.net < 0" data-label="Net">
                   Rs. {{ m.net | number: '1.0-0' }}
                 </td>
               </tr>
@@ -324,10 +327,14 @@
           </tbody>
           <tfoot>
             <tr>
-              <td class="strong">Total</td>
-              <td class="num strong">Rs. {{ monthTotal('collected') | number: '1.0-0' }}</td>
-              <td class="num strong">Rs. {{ monthTotal('expense') | number: '1.0-0' }}</td>
-              <td class="num strong" [class.bad]="monthTotal('net') < 0">
+              <td class="strong" data-label="All months">Total</td>
+              <td class="num strong" data-label="Collected">
+                Rs. {{ monthTotal('collected') | number: '1.0-0' }}
+              </td>
+              <td class="num strong" data-label="Expenses">
+                Rs. {{ monthTotal('expense') | number: '1.0-0' }}
+              </td>
+              <td class="num strong" [class.bad]="monthTotal('net') < 0" data-label="Net">
                 Rs. {{ monthTotal('net') | number: '1.0-0' }}
               </td>
             </tr>

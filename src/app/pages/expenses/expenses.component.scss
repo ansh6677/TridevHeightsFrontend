@@ -100,3 +100,30 @@ td.out {
     grid-column: span 2;
   }
 }
+
+// Each entry becomes its own card here, so the table stops needing a width
+// of its own — `min-width` would put the sideways scroll straight back.
+@media (max-width: 760px) {
+  table.slim {
+    min-width: 0;
+  }
+}
+
+@media (max-width: 560px) {
+  // Amount and Paid by side by side on a 360px screen is two half-legible
+  // fields. One per line, and the Add button at the bottom of the run.
+  .quick,
+  .filters {
+    grid-template-columns: 1fr;
+
+    .rem,
+    .clear,
+    button {
+      grid-column: span 1;
+    }
+  }
+
+  .quick .btn {
+    padding-block: 14px;
+  }
+}

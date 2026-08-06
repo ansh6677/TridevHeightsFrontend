@@ -2,6 +2,7 @@ import { Component, effect, inject, signal } from '@angular/core';
 import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { filter } from 'rxjs';
 import { AuthService } from '../core/auth.service';
+import { lockScroll } from '../core/scroll-lock';
 
 const RAIL_KEY = 'th-pms-rail';
 
@@ -510,9 +511,15 @@ const RAIL_KEY = 'th-pms-rail';
           position: sticky;
           top: 0;
           z-index: 40;
-          background: rgba(16, 29, 48, 0.92);
-          backdrop-filter: blur(12px);
-          padding: 10px 14px;
+          // Nearly opaque rather than a heavy blur: a blurred sticky bar is
+          // re-composited over the whole page on every scroll frame, which
+          // is the difference between a phone scrolling smoothly and not.
+          background: rgba(16, 29, 48, 0.97);
+          backdrop-filter: blur(6px);
+          padding: 8px 14px;
+          padding-top: max(8px, env(safe-area-inset-top));
+          padding-left: max(14px, env(safe-area-inset-left));
+          padding-right: max(14px, env(safe-area-inset-right));
           border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 
           strong {
@@ -520,6 +527,11 @@ const RAIL_KEY = 'th-pms-rail';
             font-size: 14.5px;
             font-weight: 600;
             color: $gold;
+            // The role chip beside it must never be pushed off the bar.
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
           }
         }
 
@@ -540,19 +552,30 @@ const RAIL_KEY = 'th-pms-rail';
           }
         }
 
+        // 44px square: the one control on the bar that has to be hit
+        // first time, every time.
         .burger {
           display: grid;
+          align-content: center;
           gap: 4px;
-          width: 34px;
-          padding: 7px 6px;
+          width: 44px;
+          height: 44px;
+          margin-left: -5px;
+          padding: 0 10px;
           border: none;
+          border-radius: $radius-xs;
           background: transparent;
           cursor: pointer;
+          -webkit-tap-highlight-color: transparent;
 
           span {
             height: 2px;
             border-radius: 2px;
             background: rgba(255, 255, 255, 0.85);
+          }
+
+          &:active {
+            background: rgba(255, 255, 255, 0.1);
           }
         }
 
@@ -562,16 +585,33 @@ const RAIL_KEY = 'th-pms-rail';
           top: 0;
           left: 0;
           z-index: 60;
-          width: 254px;
+          width: min(84vw, 288px);
           height: 100dvh;
-          padding: 18px 14px;
+          padding: 18px 14px calc(18px + env(safe-area-inset-bottom));
+          padding-top: max(18px, env(safe-area-inset-top));
           transform: translateX(-100%);
+          // Only the transform moves, so the drawer slides on the compositor
+          // instead of being laid out again on every frame.
           transition: transform $speed $ease;
+          will-change: transform;
           box-shadow: $shadow-lg;
+          // The links scroll inside the drawer without handing the gesture
+          // to the page behind it.
+          overscroll-behavior: contain;
+        }
+
+        // A finger on a link needs more room than a cursor does.
+        .side nav a {
+          padding: 13px 13px;
+        }
+
+        .who .out {
+          padding: 12px;
         }
 
         .rail .side {
-          padding: 18px 14px;
+          padding: 18px 14px calc(18px + env(safe-area-inset-bottom));
+          padding-top: max(18px, env(safe-area-inset-top));
           align-items: stretch;
         }
 
@@ -588,7 +628,7 @@ const RAIL_KEY = 'th-pms-rail';
 
         .rail .side nav a {
           justify-content: flex-start;
-          padding: 11px 13px;
+          padding: 13px 13px;
           gap: 10px;
         }
 
@@ -602,13 +642,16 @@ const RAIL_KEY = 'th-pms-rail';
           transform: none;
         }
 
+        // No blur on this one: it covers the whole viewport, and a
+        // full-screen backdrop filter is the most expensive thing a phone
+        // can be asked to paint while something else is animating over it.
         .open .scrim {
           display: block;
           position: fixed;
           inset: 0;
           z-index: 50;
-          background: rgba(12, 17, 30, 0.5);
-          backdrop-filter: blur(2px);
+          background: rgba(12, 17, 30, 0.55);
+          animation: scrim-in $speed $ease both;
         }
 
         .pin {
@@ -618,6 +661,15 @@ const RAIL_KEY = 'th-pms-rail';
         .shut {
           display: grid;
           place-items: center;
+          width: 42px;
+          height: 42px;
+          font-size: 26px;
+        }
+      }
+
+      @keyframes scrim-in {
+        from {
+          opacity: 0;
         }
       }
     `
@@ -635,11 +687,24 @@ export class ShellComponent {
 
   constructor() {
     // Any navigation closes the drawer, including the browser back button.
+    // The lock is dropped here rather than by the effect below, because the
+    // router is already taking the new screen to the top and the old screen's
+    // scroll position must not be put back over it.
     this.router.events
       .pipe(filter((e) => e instanceof NavigationEnd))
-      .subscribe(() => this.drawer.set(false));
+      .subscribe(() => {
+        if (this.drawer()) {
+          this.drawer.set(false);
+          lockScroll(this, false, false);
+        }
+      });
 
     effect(() => write(RAIL_KEY, this.rail() ? '1' : '0'));
+
+    // While the drawer is over the page, the page holds still. Otherwise a
+    // swipe meant for the menu scrolls the screen behind it, and closing the
+    // drawer leaves you somewhere you did not choose to be.
+    effect(() => lockScroll(this, this.drawer()));
   }
 
   initial(): string {

@@ -573,9 +573,7 @@
   }
 }
 
-// Empty bed — orange, dashed, softly pulsing, and the whole thing is the
-// button. This is the only thing in the whole console that moves, so the
-// movement can only ever mean one thing: that bed is empty.
+// Empty bed — orange, dashed, and the whole thing is the button.
 .slot.vacant {
   align-items: center;
   justify-content: center;
@@ -589,11 +587,35 @@
   color: $vacant-strong;
   font-family: $font-body;
   cursor: pointer;
-  animation: vacancy-edge 1.8s $ease infinite;
-  transition: transform $speed $ease;
+  transition: transform $speed-fast $ease, background $speed $ease,
+    border-color $speed $ease, color $speed $ease;
+
+  &:focus-visible {
+    outline: 2px solid $vacant-strong;
+    outline-offset: 2px;
+  }
+
+  &.readonly {
+    cursor: default;
+  }
+}
+
+// The pulse and the hover fill are both pointer affordances, so they are
+// keyed to a pointer.
+//
+// On a phone the card is in your hand and every empty bed on screen is
+// pulsing at once — that is not a signal, it is flicker, and it repaints
+// on every scroll frame while you are trying to move the list. Worse, a
+// tap leaves the hover state stuck on: the bed you touched stays solid
+// orange until you tap somewhere else, which is exactly the "button looks
+// broken" part.
+@media (hover: hover) and (pointer: fine) {
+  .slot.vacant:not(.readonly) {
+    animation: vacancy-edge 1.8s $ease infinite;
+  }
 
   // Stop the blink while the pointer is on it — you have already noticed.
-  &:hover:not(.readonly) {
+  .slot.vacant:hover:not(.readonly) {
     animation: none;
     border-style: solid;
     border-color: $vacant;
@@ -610,14 +632,32 @@
       opacity: 1;
     }
   }
+}
 
-  &:focus-visible {
-    outline: 2px solid $vacant-strong;
-    outline-offset: 2px;
-  }
+// Touch gets a press instead: solid while the finger is down, back to
+// normal the moment it lifts. Nothing sticks.
+@media (hover: none) {
+  .slot.vacant {
+    border-style: solid;
+    border-color: $vacant-line;
+    background: linear-gradient(100deg, $vacant-tint-2 0%, $vacant-tint 70%);
 
-  &.readonly {
-    cursor: default;
+    &:active:not(.readonly) {
+      transform: scale(0.985);
+      border-color: $vacant;
+      background: $vacant;
+      color: #fff;
+
+      .plus {
+        background: #fff;
+        color: $vacant-strong;
+      }
+
+      .vacant-hint {
+        background: #fff;
+        color: $vacant-strong;
+      }
+    }
   }
 }
 
@@ -772,9 +812,59 @@
   width: 100%;
 }
 
-@media (max-width: 520px) {
+// ---------------------------------------------------------------
+//  Head tools and the reminder line
+//
+//  These sit above the media queries below on purpose: a plain rule after
+//  a media query outranks it at equal specificity, and the phone layout
+//  for .head-tools was being quietly undone by this one.
+// ---------------------------------------------------------------
+.head-tools {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  flex-wrap: wrap;
+}
+
+.remind {
+  padding-inline: 4px;
+  font-size: 12.5px;
+}
+
+.reminded {
+  font-size: 11px;
+  font-weight: 600;
+  color: #7a5410;
+  background: $gold-tint;
+  border-radius: 999px;
+  padding: 2px 8px;
+}
+
+// ---------------------------------------------------------------
+//  Phones
+//
+//  One card per row, so no card is lining up with a card beside it any
+//  more. That is what lets the rooms come out of their scroll frame (see
+//  page.scss): the card is simply as tall as the flat is big, and one
+//  swipe moves one thing — the page.
+// ---------------------------------------------------------------
+@media (max-width: 600px) {
   .cards {
     grid-template-columns: 1fr;
+    grid-auto-rows: auto;
+    gap: 14px;
+  }
+
+  .flat {
+    padding: 16px 15px 16px 18px;
+    gap: 12px;
+
+    // There is no pointer to lift the card towards, and a tap was
+    // triggering the lift and leaving it there.
+    &:hover {
+      transform: none;
+      box-shadow: $shadow-sm;
+    }
   }
 
   .flat-head {
@@ -782,9 +872,40 @@
     row-gap: 10px;
   }
 
+  .flat-id h2 {
+    font-size: 23px;
+  }
+
   .head-actions {
     grid-column: 1 / -1;
     justify-content: flex-end;
+    gap: 4px;
+
+    .link {
+      min-height: 40px;
+    }
+
+    // The words come back: they were dropped because the actions were
+    // squeezed in beside the occupancy bar, and here they have a row of
+    // their own. Two unlabelled icons over "remove this flat" is not a
+    // guess anyone should have to make on a phone.
+    .link .lbl {
+      display: inline;
+    }
+  }
+
+  // Three figures across a 360px screen: the labels and the tabular
+  // numbers stay, the padding and the type give way.
+  .money div {
+    padding: 9px 10px;
+  }
+
+  .m-value {
+    font-size: 13.5px;
+  }
+
+  .m-label {
+    font-size: 9.5px;
   }
 
   .grid2 {
@@ -805,20 +926,61 @@
     min-height: 80px;
   }
 
+  // A row rather than a tile: plus sign, what it is, and the action, left
+  // to right along the thumb's path.
   .slot.vacant {
     flex-direction: row;
     justify-content: flex-start;
-    min-height: 52px;
-    gap: 10px;
-    padding: 10px 14px;
+    min-height: 58px;
+    gap: 11px;
+    padding: 10px 12px 10px 14px;
+    text-align: left;
   }
 
   .plus {
     margin-bottom: 0;
+    width: 30px;
+    height: 30px;
   }
 
+  // "Add tenant" stops being a whisper under the word Vacant and becomes
+  // the button's label — a solid chip on the right, which is where the
+  // thumb already is.
   .vacant-hint {
     margin-left: auto;
+    opacity: 1;
+    font-size: 12px;
+    font-weight: 700;
+    color: #fff;
+    background: $vacant;
+    border-radius: $radius-pill;
+    padding: 6px 13px;
+    white-space: nowrap;
+  }
+
+  // A viewer cannot add anyone, so their slot must not carry a button.
+  .slot.vacant.readonly .vacant-hint {
+    padding: 0;
+    background: none;
+    color: $vacant-strong;
+    font-weight: 500;
+  }
+
+  // Edit and move-out are 15px icons. The target around them is not.
+  .slot-links .link {
+    min-width: 42px;
+    min-height: 42px;
+    justify-content: center;
+    padding: 0;
+  }
+
+  .slot-foot {
+    gap: 8px;
+  }
+
+  .remind {
+    min-height: 40px;
+    padding-inline: 8px;
   }
 
   .group {
@@ -828,25 +990,42 @@
   .toolbar .key {
     order: -1;
   }
-}
 
-.head-tools {
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  flex-wrap: wrap;
-}
+  // The primary action goes on top and takes the full width; the two
+  // exports share the row underneath it.
+  .head-tools {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
 
-.remind {
-  padding-inline: 4px;
-  font-size: 12.5px;
-}
+    .btn {
+      width: 100%;
+    }
 
-.reminded {
-  font-size: 11px;
-  font-weight: 600;
-  color: #7a5410;
-  background: $gold-tint;
-  border-radius: 999px;
-  padding: 2px 8px;
+    .btn-primary,
+    .pill-view {
+      order: -1;
+      grid-column: 1 / -1;
+    }
+
+    .pill-view {
+      justify-content: center;
+    }
+  }
+
+  // 16px, or iOS zooms the page in the moment one of these is focused and
+  // never zooms back out.
+  .room-row input {
+    font-size: 16px;
+  }
+
+  .room-row {
+    grid-template-columns: minmax(0, 1fr) 96px 44px;
+  }
+
+  // The little × that removes a room row — a 38px box was a miss as often
+  // as a hit.
+  .icon-btn {
+    height: 44px;
+  }
 }

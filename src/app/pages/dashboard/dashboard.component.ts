@@ -1,10 +1,11 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, DestroyRef, effect, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { ApiService } from '../../core/api.service';
 import { csvName, downloadCsv } from '../../core/csv';
 import { errorText } from '../../core/error-text';
+import { lockScroll } from '../../core/scroll-lock';
 import { IconComponent } from '../../shared/icon.component';
 import { DashboardSummary, MonthPoint, PendingTenant } from '../../core/models';
 
@@ -105,6 +106,10 @@ export class DashboardComponent {
 
   constructor() {
     this.load();
+
+    // The page behind the reminder sheet stays where it was.
+    effect(() => lockScroll(this, this.remindOpen()));
+    inject(DestroyRef).onDestroy(() => lockScroll(this, false));
   }
 
   async load(): Promise<void> {
