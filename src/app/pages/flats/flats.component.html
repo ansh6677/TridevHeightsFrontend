@@ -25,8 +25,7 @@
         }
 
         @if (totals().hallVacant > 0) {
-          <span class="chip chip-hall">
-            <span class="dot-vacant"></span>
+          <span class="chip chip-room">
             <b>{{ totals().hallVacant }}</b> in halls
           </span>
         }
@@ -68,12 +67,12 @@
              [ngModel]="query()" (ngModelChange)="query.set($event); load()" />
     </div>
 
+    <!-- Three colours, three meanings. The hall and the bedrooms used to be
+         in here too, which meant the key was half legend and half glossary. -->
     <div class="key">
       <span><i class="k-vacant"></i>Vacant bed</span>
       <span><i class="k-paid"></i>Receipt sent</span>
       <span><i class="k-due"></i>Rent due</span>
-      <span><i class="k-hall"></i>Hall · shared</span>
-      <span><i class="k-bed"></i>Bedroom</span>
     </div>
   </div>
 
@@ -96,22 +95,22 @@
         <article class="card flat" [class.has-vacancy]="card.vacantSeats > 0">
           <header class="flat-head">
             <div class="flat-id">
+              <span class="eyebrow">Flat</span>
               <h2>{{ card.flatNo }}</h2>
               @if (card.floor) {
-                <span class="muted tiny">{{ card.floor }} floor</span>
+                <span class="floor">{{ card.floor }} floor</span>
               }
             </div>
 
-            <div class="occupancy">
-              <span class="occ-count">
-                <strong>{{ card.filledSeats }}</strong>/{{ card.totalSeats }}
-              </span>
-              <span class="occ-word">beds filled</span>
-              <div class="track" [class.open]="card.vacantSeats > 0">
-                <div class="fill" [class.full]="card.vacantSeats === 0"
-                     [style.width.%]="fillPercent(card)"></div>
-              </div>
-            </div>
+            <span class="state" [class.open]="card.vacantSeats > 0">
+              @if (card.vacantSeats > 0) {
+                <span class="dot-vacant"></span>
+                {{ card.vacantSeats }} free
+              } @else {
+                <th-icon name="check" />
+                Full
+              }
+            </span>
 
             @if (auth.isAdmin()) {
               <div class="head-actions">
@@ -129,40 +128,52 @@
             }
           </header>
 
-          @if (card.vacantSeats > 0) {
-            <p class="vacancy-note">
-              <span class="blink-dot"></span>
-              <span class="ink-vacant">
-                {{ card.vacantSeats }} {{ card.vacantSeats === 1 ? 'bed' : 'beds' }} vacant
-              </span>
-              @if (card.hallVacant > 0 && card.bedroomVacant > 0) {
-                <span class="split">
-                  {{ card.hallVacant }} in the hall · {{ card.bedroomVacant }} in bedrooms
-                </span>
-              } @else if (card.hallVacant > 0) {
-                <span class="split">all in the hall</span>
+          <!-- One segment per bed rather than a percentage: you can see at a
+               glance that two are free, and which end of the flat they are. -->
+          <div class="occupancy">
+            @if (seatPips(card); as pips) {
+              @if (pips.length > 0) {
+                <div class="pips" role="img"
+                     [attr.aria-label]="card.filledSeats + ' of ' + card.totalSeats + ' beds filled'">
+                  @for (taken of pips; track $index) {
+                    <i class="pip" [class.on]="taken"></i>
+                  }
+                </div>
               } @else {
-                <span class="split">all in bedrooms</span>
+                <div class="track" [class.open]="card.vacantSeats > 0">
+                  <div class="fill" [style.width.%]="fillPercent(card)"></div>
+                </div>
+              }
+            }
+
+            <p class="occ-line">
+              <strong>{{ card.filledSeats }}</strong>/{{ card.totalSeats }} beds filled
+              @if (card.vacantSeats > 0) {
+                @if (card.hallVacant > 0 && card.bedroomVacant > 0) {
+                  <span class="split">
+                    · {{ card.hallVacant }} free in the hall, {{ card.bedroomVacant }} in bedrooms
+                  </span>
+                } @else if (card.hallVacant > 0) {
+                  <span class="split">· every free bed is in the hall</span>
+                } @else {
+                  <span class="split">· every free bed is in a bedroom</span>
+                }
               }
             </p>
-          } @else {
-            <p class="vacancy-note full">
-              <span class="dot"></span>
-              Fully occupied
-            </p>
-          }
+          </div>
 
+          <!-- Three figures, one band, hairlines between them. Three tinted
+               boxes were three more colour fields on a card that had plenty. -->
           <div class="money">
-            <div class="m-neutral">
+            <div class="m">
               <span class="m-label">Due</span>
               <span class="m-value">Rs. {{ card.monthlyRentTotal | number: '1.0-0' }}</span>
             </div>
-            <div class="m-green">
+            <div class="m">
               <span class="m-label">Collected</span>
               <span class="m-value good">Rs. {{ card.collectedThisMonth | number: '1.0-0' }}</span>
             </div>
-            <div [class.m-red]="card.pendingThisMonth > 0"
-                 [class.m-green]="card.pendingThisMonth <= 0">
+            <div class="m">
               <span class="m-label">Pending</span>
               <span class="m-value" [class.bad]="card.pendingThisMonth > 0"
                     [class.good]="card.pendingThisMonth <= 0">
@@ -176,10 +187,12 @@
                no longer makes every card below it jump. -->
           <div class="flat-body scroll-y">
           @for (g of card.groups; track g.key) {
-            <section class="group" [class.group-hall]="g.key === 'hall'"
-                     [class.group-open]="g.vacant > 0">
+            <section class="group" [class.group-hall]="g.key === 'hall'">
               <div class="group-head">
-                <span class="group-tag">{{ g.label }}</span>
+                <span class="group-tag">
+                  <th-icon [name]="g.key === 'hall' ? 'users' : 'bed'" />
+                  {{ g.label }}
+                </span>
                 <span class="group-hint">{{ g.hint }}</span>
                 <span class="group-stat">
                   @if (g.vacant > 0) {
@@ -192,14 +205,12 @@
               </div>
 
               @for (room of g.rooms; track room.name) {
-                <section class="room" [class]="room.tone" [class.open]="room.vacant > 0">
+                <section class="room" [class.open]="room.vacant > 0">
                   <div class="room-head">
-                    <span class="room-name">
-                      <i class="room-swatch"></i>{{ room.name }}
-                    </span>
+                    <span class="room-name">{{ room.name }}</span>
                     <span class="room-tail">
                       @if (room.vacant > 0) {
-                        <span class="room-vacant ink-vacant">{{ room.vacant }} free</span>
+                        <span class="room-vacant">{{ room.vacant }} free</span>
                       }
                       <span class="room-count" [class.full]="room.vacant === 0">
                         {{ room.filled }}/{{ room.capacity }}
@@ -212,10 +223,16 @@
                       <div class="slot taken" [class.paid]="o.paidThisMonth"
                            [class.unpaid]="!o.paidThisMonth">
                         <div class="slot-top">
-                          <span class="who">{{ o.name }}</span>
+                          <!-- Initials, ringed green or red. The ring is the
+                               whole rent status: the coloured spine and the
+                               tinted wash were saying it twice more. -->
+                          <span class="avatar" aria-hidden="true">{{ initials(o.name) }}</span>
+                          <span class="who-block">
+                            <span class="who">{{ o.name }}</span>
+                            <span class="mail">{{ o.email }}</span>
+                          </span>
                           <span class="rent">Rs. {{ o.monthlyRent | number: '1.0-0' }}</span>
                         </div>
-                        <span class="muted tiny mail">{{ o.email }}</span>
 
                         <div class="slot-foot">
                           @if (o.paidThisMonth) {
@@ -223,7 +240,7 @@
                               Receipt sent
                             </span>
                           } @else if (auth.isAdmin()) {
-                            <button type="button" class="btn btn-gold btn-sm"
+                            <button type="button" class="btn btn-money btn-sm"
                                     (click)="openReceipt(card, o)">
                               <th-icon name="receipt" />
                               Send receipt

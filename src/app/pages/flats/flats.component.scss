@@ -1,5 +1,19 @@
 @use '../../../styles/variables' as *;
 
+// ===============================================================
+//  Flats · the tenant board
+//
+//  The old board ran on ten hues at once — four bedroom tones, a violet
+//  hall, orange vacancy, green, red, gold — and every empty bed was an
+//  orange tile that blinked. Orange won every glance, which meant the two
+//  colours that were actually about money never got one.
+//
+//  This one runs on four: slate for structure, indigo for a bed you can
+//  fill, green for money in, red for money owed. Rooms are told apart by
+//  their labels and their rules; the hall by its band and its icon. Where
+//  a colour used to do the work, shape, weight and space do it now.
+// ===============================================================
+
 .toolbar {
   display: flex;
   align-items: center;
@@ -46,34 +60,44 @@
 // gains a tenant.
 .cards {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(390px, 1fr));
   grid-auto-rows: 1fr;
   gap: 18px;
   align-items: stretch;
 }
 
-// A flat with a spare bed carries an orange edge; a full one, a green edge.
-// The edge is the first thing you see from across the room.
+// A flat with a bed going spare lights its top-right corner in indigo, and
+// that is the whole edge signal. The 5px orange bar down the side of every
+// such card was the single loudest thing on the page and it repeated once
+// per flat.
 .flat {
   position: relative;
   height: 100%;
-  padding: 20px 20px 20px 23px;
+  padding: 18px 20px 20px;
   display: flex;
   flex-direction: column;
   gap: 14px;
   overflow: hidden;
-  transition: box-shadow $speed $ease, transform $speed $ease;
+  transition: box-shadow $speed $ease, transform $speed $ease, border-color $speed $ease;
 
-  &::before {
+  &::after {
     content: '';
     position: absolute;
-    inset: 0 auto 0 0;
-    width: 5px;
-    background: $occupied;
+    inset: 0 0 auto auto;
+    width: 210px;
+    height: 150px;
+    pointer-events: none;
+    background: radial-gradient(130px 100px at 100% 0, $vacant-glow, transparent 72%);
+    opacity: 0;
+    transition: opacity $speed $ease;
   }
 
-  &.has-vacancy::before {
-    background: $grad-vacant;
+  &.has-vacancy {
+    border-color: $vacant-line;
+
+    &::after {
+      opacity: 1;
+    }
   }
 
   &:hover {
@@ -83,189 +107,208 @@
 }
 
 // ---------------------------------------------------------------
-//  Header with occupancy
+//  Header
 // ---------------------------------------------------------------
 .flat-head {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
+  display: flex;
   align-items: center;
-  gap: 14px;
+  flex-wrap: wrap;
+  gap: 8px 12px;
 }
 
 .flat-id {
   display: flex;
-  flex-direction: column;
-  gap: 1px;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 2px 9px;
+  flex: 1 1 auto;
+  min-width: 0;
 
   h2 {
     font-family: $font-heading;
-    font-size: 26px;
-    font-weight: 600;
-    color: $navy;
-    line-height: 1.05;
+    font-size: 27px;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    line-height: 1;
+    color: $ink;
+    font-variant-numeric: tabular-nums;
     margin: 0;
   }
 }
 
+// A flat number on its own is just a number. Four small letters above it
+// and it is an address.
+.eyebrow {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: $muted-2;
+}
+
+.floor {
+  font-size: 12px;
+  color: $muted;
+}
+
+// One chip carrying the state of the whole flat, where the eye lands after
+// the number.
+.state {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex: none;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  padding: 5px 12px;
+  border-radius: $radius-pill;
+  background: $surface-3;
+  color: $muted;
+  box-shadow: inset 0 0 0 1px $line;
+
+  .ic {
+    width: 13px;
+    height: 13px;
+  }
+
+  &.open {
+    background: $vacant-tint;
+    color: $vacant-strong;
+    box-shadow: inset 0 0 0 1px $vacant-line;
+  }
+}
+
+// Icon-only on the desktop board: both carry a title, and the words were
+// eating the room the flat number and its state needed. The labels come
+// back on a phone, where the actions get a row of their own.
+.head-actions {
+  display: flex;
+  flex: none;
+  gap: 2px;
+
+  .link {
+    gap: 5px;
+    padding-inline: 7px;
+
+    .ic {
+      width: 15px;
+      height: 15px;
+    }
+
+    .lbl {
+      display: none;
+    }
+  }
+}
+
+// ---------------------------------------------------------------
+//  Occupancy — one segment per bed
+//
+//  Six green blocks and two indigo gaps is a count you take in without
+//  reading. "75%" is not, and a single sliding bar hides whether the gap
+//  is one bed or three.
+// ---------------------------------------------------------------
 .occupancy {
   display: flex;
   flex-direction: column;
-  gap: 3px;
-  min-width: 0;
+  gap: 7px;
+  margin-top: -2px;
 }
 
-.occ-count {
-  font-family: $font-heading;
-  font-size: 13px;
-  color: $muted;
-  font-variant-numeric: tabular-nums;
+.pips {
+  display: flex;
+  gap: 4px;
+}
 
-  strong {
-    font-size: 17px;
-    color: $ink;
+.pip {
+  flex: 1 1 0;
+  min-width: 7px;
+  height: 7px;
+  border-radius: 4px;
+  background: $vacant-tint-2;
+  box-shadow: inset 0 0 0 1px $vacant-line;
+  transition: background $speed $ease, box-shadow $speed $ease;
+
+  &.on {
+    background: $occupied;
+    box-shadow: none;
   }
 }
 
-.occ-word {
-  font-size: 10.5px;
-  font-weight: 600;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  color: $muted;
-}
-
-// The unfilled part of the bar is the vacancy, so it is drawn in the
-// vacancy colour rather than left grey.
+// Past eighteen beds the segments stop being countable and this takes over.
 .track {
-  height: 6px;
-  background: rgba(11, 18, 32, 0.08);
+  height: 7px;
+  background: $vacant-tint-2;
+  box-shadow: inset 0 0 0 1px $vacant-line;
   border-radius: 999px;
   overflow: hidden;
-  margin-top: 3px;
-
-  &.open {
-    background: $vacant-tint-2;
-  }
 }
 
 .fill {
   height: 100%;
-  background: $grad-green;
+  background: $occupied;
   border-radius: 999px;
   transition: width 0.5s $ease;
+}
 
-  &.full {
-    background: $grad-gold;
+.occ-line {
+  margin: 0;
+  font-size: 12.5px;
+  color: $muted;
+  font-variant-numeric: tabular-nums;
+
+  strong {
+    font-weight: 700;
+    color: $ink;
   }
-}
-
-.head-actions {
-  display: flex;
-  gap: 2px;
-}
-
-// ---------------------------------------------------------------
-//  The scrolling body
-//
-//  Everything above it — the flat number, the occupancy bar, the money
-//  strip — is pinned. Only the rooms move, which is the part that grows
-//  as beds fill up.
-// ---------------------------------------------------------------
-.flat-body {
-  --h: 430px;
-
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-  flex: 1 1 auto;
-  min-height: 0;
-}
-
-// ---------------------------------------------------------------
-//  Vacancy line
-// ---------------------------------------------------------------
-.vacancy-note {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin: -4px 0 0;
-  font-size: 13px;
-  font-weight: 600;
-  color: $vacant;
 
   .split {
-    font-weight: 500;
-    font-size: 12px;
-    color: $muted;
-  }
-
-  &.full {
-    color: $muted;
-
-    .dot {
-      width: 7px;
-      height: 7px;
-      border-radius: 50%;
-      background: $gold;
-    }
+    color: $muted-2;
   }
 }
 
 // ---------------------------------------------------------------
-//  Money strip
+//  Money band
+//
+//  Three figures, one surface, hairlines between them. The three tinted
+//  boxes were three more colour fields on a card that had plenty; the
+//  colour that matters is on the numbers themselves.
 // ---------------------------------------------------------------
 .money {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 1px;
-  background: $line;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  background: $surface-2;
   border: 1px solid $line;
   border-radius: $radius-sm;
   overflow: hidden;
 
-  div {
+  .m {
     display: flex;
     flex-direction: column;
-    gap: 1px;
+    gap: 2px;
     min-width: 0;
-    padding: 10px 13px;
-    background: $navy-tint;
-  }
+    padding: 9px 13px;
 
-  // Due is neutral, money in is green, money still owed is red — the same
-  // three colours the dashboard uses for the same three numbers.
-  .m-green {
-    background: $occupied-tint;
-
-    .m-label {
-      color: $occupied;
-    }
-  }
-
-  .m-red {
-    background: $due-tint;
-
-    .m-label {
-      color: $due;
+    + .m {
+      border-left: 1px solid $line;
     }
   }
 }
 
 .m-label {
-  font-size: 10px;
-  font-weight: 600;
-  letter-spacing: 0.05em;
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.09em;
   text-transform: uppercase;
-  color: $navy;
-  opacity: 0.68;
+  color: $muted-2;
 }
 
 .m-value {
   font-family: $font-heading;
   font-size: 14.5px;
   font-weight: 600;
-  color: $navy;
+  color: $ink;
   font-variant-numeric: tabular-nums;
 
   &.good {
@@ -278,49 +321,82 @@
 }
 
 // ---------------------------------------------------------------
-//  Room bands — the hall is kept apart from the bedrooms, because it
-//  is a different kind of room and it is the one people ask about.
+//  The scrolling body
+//
+//  Everything above it — the flat number, the pips, the money band — is
+//  pinned. Only the rooms move, which is the part that grows as beds fill.
+// ---------------------------------------------------------------
+.flat-body {
+  --h: 430px;
+
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+// ---------------------------------------------------------------
+//  Room bands
+//
+//  The hall keeps its own band above the bedrooms, because it is a
+//  different kind of room and it is the one people ask about. It is told
+//  apart by its heading and its icon now, not by a violet box.
 // ---------------------------------------------------------------
 .group {
   display: flex;
   flex-direction: column;
-  gap: 11px;
-  border: 1px solid $line;
-  border-radius: $radius-sm;
-  padding: 12px;
-  background: rgba(11, 18, 32, 0.015);
+  gap: 13px;
+  padding-top: 14px;
+  border-top: 1px solid $line;
+
+  &:first-child {
+    padding-top: 2px;
+    border-top: none;
+  }
 }
 
-.group-hall {
-  border-color: $hall-line;
-  background: linear-gradient(180deg, $hall-tint 0%, rgba(242, 236, 253, 0.25) 100%);
-}
-
-// Grid, not wrap: the tag and the count belong on the same line whatever
-// the card width, with the description dropping underneath them.
+// Grid, not wrap: the heading and the count belong on the same line
+// whatever the card width, with the description dropping underneath them.
 .group-head {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
-  gap: 3px 10px;
+  gap: 2px 10px;
 }
 
 .group-tag {
   grid-area: 1 / 1;
   justify-self: start;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
   font-family: $font-heading;
   font-size: 11.5px;
-  font-weight: 600;
-  letter-spacing: 0.06em;
+  font-weight: 700;
+  letter-spacing: 0.09em;
   text-transform: uppercase;
-  color: $navy;
-  background: $navy-tint;
-  border-radius: 999px;
-  padding: 3px 11px;
+  color: $ink;
 
-  .group-hall & {
-    color: #fff;
-    background: $hall;
+  .ic {
+    width: 15px;
+    height: 15px;
+    color: $muted-2;
+  }
+}
+
+// The hall's heading sits in a slate capsule so the shared room still
+// stands out from the bedrooms above the fold — without being the fifth
+// colour on the card.
+.group-hall .group-tag {
+  margin-left: -10px;
+  padding: 4px 11px;
+  border-radius: $radius-pill;
+  background: $room-tint;
+  color: $room;
+
+  .ic {
+    color: $room;
   }
 }
 
@@ -328,7 +404,7 @@
   grid-column: 1 / -1;
   grid-row: 2;
   font-size: 11.5px;
-  color: $muted;
+  color: $muted-2;
 }
 
 .group-stat {
@@ -346,76 +422,39 @@
 }
 
 // ---------------------------------------------------------------
-//  Rooms and seat slots
+//  Rooms
 // ---------------------------------------------------------------
 .room {
-  // Every room carries its own colour. Hall violet, bedrooms cycle
-  // through four tones so two rooms side by side never read as one.
-  --tone: #{$bed-4};
-  --tone-tint: #{$bed-4-tint};
-
   display: flex;
   flex-direction: column;
-  gap: 8px;
-
-  &.tone-hall {
-    --tone: #{$hall};
-    --tone-tint: #{$hall-tint};
-  }
-
-  &.tone-1 {
-    --tone: #{$bed-1};
-    --tone-tint: #{$bed-1-tint};
-  }
-
-  &.tone-2 {
-    --tone: #{$bed-2};
-    --tone-tint: #{$bed-2-tint};
-  }
-
-  &.tone-3 {
-    --tone: #{$bed-3};
-    --tone-tint: #{$bed-3-tint};
-  }
-
-  &.tone-4 {
-    --tone: #{$bed-4};
-    --tone-tint: #{$bed-4-tint};
-  }
+  gap: 9px;
 }
 
 .room-head {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   gap: 10px;
-  padding-bottom: 5px;
-  border-bottom: 1px solid var(--tone-tint);
+  padding-bottom: 6px;
+  border-bottom: 1px solid $line;
 }
 
 .room-name {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  font-size: 11px;
+  font-size: 11.5px;
   font-weight: 700;
   letter-spacing: 0.07em;
   text-transform: uppercase;
-  color: var(--tone);
-}
-
-.room-swatch {
-  width: 9px;
-  height: 9px;
-  border-radius: 3px;
-  background: var(--tone);
-  flex: none;
+  color: $room;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .room-tail {
   display: inline-flex;
   align-items: center;
   gap: 8px;
+  margin-left: auto;
 }
 
 .room-vacant {
@@ -423,14 +462,15 @@
   font-weight: 700;
   letter-spacing: 0.04em;
   text-transform: uppercase;
+  color: $vacant;
 }
 
 .room-count {
   font-size: 11.5px;
   font-weight: 600;
-  color: var(--tone);
+  color: $muted;
   font-variant-numeric: tabular-nums;
-  background: var(--tone-tint);
+  background: $surface-3;
   border-radius: 999px;
   padding: 2px 9px;
 
@@ -440,70 +480,87 @@
   }
 }
 
+// ---------------------------------------------------------------
+//  Bed slots
+// ---------------------------------------------------------------
 .slots {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(168px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(182px, 1fr));
   gap: 8px;
 }
 
 .slot {
   position: relative;
   border-radius: $radius-sm;
-  padding: 11px 12px 11px 14px;
-  min-height: 92px;
+  padding: 11px 12px;
+  min-height: 98px;
   display: flex;
   flex-direction: column;
-  gap: 3px;
+  gap: 5px;
   text-align: left;
   overflow: hidden;
 }
 
-// A filled bed is white with a coloured spine: green once the receipt
-// has gone out, red while the rent is still owed.
+// A filled bed is a plain white card. Whether the rent is in is carried by
+// the ring on the initials and the pill at the foot — the coloured spine
+// and the tinted wash underneath were saying it a third and fourth time.
 .slot.taken {
   background: $surface;
   border: 1px solid $line;
-
-  &::before {
-    content: '';
-    position: absolute;
-    inset: 0 auto 0 0;
-    width: 4px;
-  }
-
-  &.paid {
-    border-color: $occupied-line;
-
-    &::before {
-      background: $occupied;
-    }
-  }
+  box-shadow: $shadow-xs;
 
   &.unpaid {
     border-color: $due-line;
-    background: linear-gradient(100deg, $due-tint 0%, $surface 55%);
-
-    &::before {
-      background: $due;
-    }
   }
 }
 
 .slot-top {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 9px;
+}
+
+// Initials rather than another colour block: it names the person at a
+// glance and gives the card an anchor on the left. The ring around it is
+// the rent status.
+.avatar {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  flex: none;
+  border-radius: 50%;
+  font-family: $font-heading;
+  font-size: 11px;
+  font-weight: 700;
+  color: $room;
+  background: $room-tint;
+  box-shadow: 0 0 0 2px $surface, 0 0 0 3.5px $line-2;
+
+  .slot.paid & {
+    box-shadow: 0 0 0 2px $surface, 0 0 0 3.5px $occupied-line;
+  }
+
+  .slot.unpaid & {
+    box-shadow: 0 0 0 2px $surface, 0 0 0 3.5px $due-line;
+  }
+}
+
+.who-block {
   display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 8px;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
 }
 
 // Two lines rather than an ellipsis: the rent is on the card beside it and
 // the room above it, but a half-printed name is the one thing here you
 // cannot work out from context.
 .who {
-  font-size: 14px;
+  font-size: 13.5px;
   font-weight: 600;
   line-height: 1.3;
-  min-width: 0;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
@@ -511,24 +568,26 @@
   overflow-wrap: anywhere;
 }
 
-.rent {
-  font-family: $font-heading;
-  font-size: 12.5px;
-  font-weight: 600;
-  color: $navy;
-  font-variant-numeric: tabular-nums;
-  white-space: nowrap;
-}
-
 .mail {
+  font-size: 11px;
+  color: $muted-2;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
+.rent {
+  font-family: $font-heading;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: $ink;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
 .slot-foot {
   margin-top: auto;
-  padding-top: 7px;
+  padding-top: 8px;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -544,7 +603,7 @@
 
   .link {
     padding: 5px 6px;
-    color: $muted;
+    color: $muted-2;
 
     .ic {
       width: 15px;
@@ -557,42 +616,34 @@
   }
 }
 
-// On a narrow card the head actions drop their words and keep their icons.
-.head-actions .link {
-  gap: 5px;
-
-  .ic {
-    width: 15px;
-    height: 15px;
-  }
-}
-
-@media (max-width: 460px) {
-  .head-actions .link .lbl {
-    display: none;
-  }
-}
-
-// Empty bed — orange, dashed, and the whole thing is the button.
+// ---------------------------------------------------------------
+//  Empty bed
+//
+//  Dashed, indigo, and the whole tile is the button. It does not blink any
+//  more: a flat with six spare beds had six tiles pulsing at once, which is
+//  not a signal, it is wallpaper — and it repainted on every scroll frame.
+//  A dashed outline already says "nothing here yet" in a way a filled card
+//  never can.
+// ---------------------------------------------------------------
 .slot.vacant {
   align-items: center;
   justify-content: center;
-  gap: 1px;
+  gap: 2px;
   // Shorter than a filled bed: when it shares a row the grid stretches it
   // to match anyway, and a column of empty beds should not tower.
-  min-height: 74px;
-  padding-left: 12px;
+  min-height: 80px;
   background: $vacant-tint;
   border: 1.5px dashed $vacant-line;
   color: $vacant-strong;
   font-family: $font-body;
   cursor: pointer;
   transition: transform $speed-fast $ease, background $speed $ease,
-    border-color $speed $ease, color $speed $ease;
+    border-color $speed $ease, box-shadow $speed $ease;
 
   &:focus-visible {
-    outline: 2px solid $vacant-strong;
-    outline-offset: 2px;
+    outline: none;
+    border-color: $vacant;
+    box-shadow: 0 0 0 3px $vacant-glow;
   }
 
   &.readonly {
@@ -600,32 +651,19 @@
   }
 }
 
-// The pulse and the hover fill are both pointer affordances, so they are
-// keyed to a pointer.
-//
-// On a phone the card is in your hand and every empty bed on screen is
-// pulsing at once — that is not a signal, it is flicker, and it repaints
-// on every scroll frame while you are trying to move the list. Worse, a
-// tap leaves the hover state stuck on: the bed you touched stays solid
-// orange until you tap somewhere else, which is exactly the "button looks
-// broken" part.
+// A tint deepening and the plus filling in, rather than the whole tile
+// going solid — the old hover turned a quarter of the card into a colour
+// field, and on touch it stuck there until you tapped elsewhere.
 @media (hover: hover) and (pointer: fine) {
-  .slot.vacant:not(.readonly) {
-    animation: vacancy-edge 1.8s $ease infinite;
-  }
-
-  // Stop the blink while the pointer is on it — you have already noticed.
-  .slot.vacant:hover:not(.readonly) {
-    animation: none;
+  .slot.vacant:not(.readonly):hover {
     border-style: solid;
     border-color: $vacant;
-    background: $vacant;
-    color: #fff;
+    background: $vacant-tint-2;
     transform: translateY(-1px);
 
     .plus {
-      background: #fff;
-      color: $vacant-strong;
+      background: $vacant;
+      color: #fff;
     }
 
     .vacant-hint {
@@ -634,30 +672,14 @@
   }
 }
 
-// Touch gets a press instead: solid while the finger is down, back to
-// normal the moment it lifts. Nothing sticks.
+// Touch gets a press instead: it deepens while the finger is down and
+// comes back the moment it lifts. Nothing sticks.
 @media (hover: none) {
-  .slot.vacant {
+  .slot.vacant:active:not(.readonly) {
+    transform: scale(0.985);
     border-style: solid;
-    border-color: $vacant-line;
-    background: linear-gradient(100deg, $vacant-tint-2 0%, $vacant-tint 70%);
-
-    &:active:not(.readonly) {
-      transform: scale(0.985);
-      border-color: $vacant;
-      background: $vacant;
-      color: #fff;
-
-      .plus {
-        background: #fff;
-        color: $vacant-strong;
-      }
-
-      .vacant-hint {
-        background: #fff;
-        color: $vacant-strong;
-      }
-    }
+    border-color: $vacant;
+    background: $vacant-tint-2;
   }
 }
 
@@ -667,7 +689,7 @@
   width: 26px;
   height: 26px;
   border-radius: 50%;
-  background: rgba(234, 88, 12, 0.16);
+  background: $vacant-soft;
   color: $vacant-strong;
   margin-bottom: 3px;
   transition: background $speed $ease, color $speed $ease;
@@ -687,7 +709,7 @@
 
 .vacant-hint {
   font-size: 11px;
-  opacity: 0.8;
+  opacity: 0.75;
 }
 
 .pill-view {
@@ -715,13 +737,15 @@
   grid-column: span 2;
 }
 
+// These two lines are information, not a warning. In gold they read as
+// "careful", and gold was already the modal's own top edge.
 .notice {
   margin: 0;
   font-size: 13px;
   line-height: 1.55;
-  color: #7a5410;
-  background: $gold-tint;
-  border: 1px solid rgba(230, 162, 51, 0.35);
+  color: $vacant-deep;
+  background: $vacant-tint;
+  border: 1px solid $vacant-line;
   border-radius: $radius-sm;
   padding: 11px 14px;
 }
@@ -730,7 +754,8 @@
   display: flex;
   flex-direction: column;
   gap: 9px;
-  background: rgba(11, 18, 32, 0.03);
+  background: $surface-2;
+  border: 1px solid $line;
   border-radius: $radius-sm;
   padding: 14px;
 }
@@ -831,11 +856,13 @@
   font-size: 12.5px;
 }
 
+// When the reminder went out is a footnote, not a status. In gold it was
+// competing with the button beside it.
 .reminded {
   font-size: 11px;
   font-weight: 600;
-  color: #7a5410;
-  background: $gold-tint;
+  color: $muted;
+  background: $surface-3;
   border-radius: 999px;
   padding: 2px 8px;
 }
@@ -856,7 +883,7 @@
   }
 
   .flat {
-    padding: 16px 15px 16px 18px;
+    padding: 16px 15px 18px;
     gap: 12px;
 
     // There is no pointer to lift the card towards, and a tap was
@@ -867,17 +894,12 @@
     }
   }
 
-  .flat-head {
-    grid-template-columns: auto minmax(0, 1fr);
-    row-gap: 10px;
-  }
-
   .flat-id h2 {
-    font-size: 23px;
+    font-size: 24px;
   }
 
   .head-actions {
-    grid-column: 1 / -1;
+    width: 100%;
     justify-content: flex-end;
     gap: 4px;
 
@@ -886,7 +908,7 @@
     }
 
     // The words come back: they were dropped because the actions were
-    // squeezed in beside the occupancy bar, and here they have a row of
+    // squeezed in beside the flat's state, and here they have a row of
     // their own. Two unlabelled icons over "remove this flat" is not a
     // guess anyone should have to make on a phone.
     .link .lbl {
@@ -896,16 +918,12 @@
 
   // Three figures across a 360px screen: the labels and the tabular
   // numbers stay, the padding and the type give way.
-  .money div {
+  .money .m {
     padding: 9px 10px;
   }
 
   .m-value {
     font-size: 13.5px;
-  }
-
-  .m-label {
-    font-size: 9.5px;
   }
 
   .grid2 {
@@ -923,7 +941,7 @@
   // Stacked one per line, an empty bed does not need to be as tall as an
   // occupied one — a flat with six spare beds would be a very long card.
   .slot {
-    min-height: 80px;
+    min-height: 84px;
   }
 
   // A row rather than a tile: plus sign, what it is, and the action, left
@@ -933,7 +951,7 @@
     justify-content: flex-start;
     min-height: 58px;
     gap: 11px;
-    padding: 10px 12px 10px 14px;
+    padding: 10px 12px;
     text-align: left;
   }
 
@@ -981,10 +999,6 @@
   .remind {
     min-height: 40px;
     padding-inline: 8px;
-  }
-
-  .group {
-    padding: 10px;
   }
 
   .toolbar .key {

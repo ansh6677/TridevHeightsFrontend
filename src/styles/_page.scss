@@ -93,14 +93,14 @@
     box-shadow: inset 0 0 0 1px rgba(230, 162, 51, 0.34);
   }
 
-  &.chip-hall {
-    background: $hall-tint;
-    color: $hall-strong;
-    box-shadow: inset 0 0 0 1px $hall-line;
+  // A room is not a status. Anything that counts rooms rather than states
+  // gets this one, and stays out of the way of the four that mean something.
+  &.chip-room {
+    background: $room-tint;
+    color: $room;
+    box-shadow: inset 0 0 0 1px rgba(85, 99, 123, 0.16);
   }
 
-  // Orange, but still. The blink is kept for the flat cards alone, where
-  // it points at the actual empty bed; everywhere else the colour is enough.
   &.chip-vacant {
     background: $vacant-tint;
     color: $vacant-strong;
@@ -498,16 +498,12 @@ tfoot td {
   box-shadow: inset 0 0 0 1px $due-line;
 }
 
+// "Full" is the absence of something to do, so it is drawn as the absence
+// of a colour. Gold here was competing with the green that means paid.
 .pill-full {
-  background: $gold-tint;
-  color: $gold-ink;
-  box-shadow: inset 0 0 0 1px rgba(230, 162, 51, 0.4);
-}
-
-.pill-hall {
-  background: $hall-tint;
-  color: $hall-strong;
-  box-shadow: inset 0 0 0 1px $hall-line;
+  background: $room-tint;
+  color: $room;
+  box-shadow: inset 0 0 0 1px rgba(85, 99, 123, 0.16);
 }
 
 .pill-vacant {
@@ -519,33 +515,14 @@ tfoot td {
 // ---------------------------------------------------------------
 //  Vacancy marks
 //
-//  The blink lives on the flat cards only — beside the empty bed it is
-//  actually talking about. Elsewhere a vacancy is simply orange. One
-//  blinking thing on a screen is a signal; ten is wallpaper.
+//  Nothing blinks any more. A blink is a signal when one thing on the
+//  screen does it; a flat with six spare beds had six tiles pulsing at
+//  once, plus a pulsing dot in the header, and the whole board twitched.
+//  A vacancy is simply indigo now, and the dashed outline of an empty bed
+//  says the rest.
 // ---------------------------------------------------------------
-@keyframes vacancy-dot {
-  0%,
-  100% {
-    box-shadow: 0 0 0 0 rgba(234, 88, 12, 0);
-  }
-  50% {
-    box-shadow: 0 0 0 5px $vacant-glow;
-  }
-}
 
-@keyframes vacancy-edge {
-  0%,
-  100% {
-    border-color: $vacant-line;
-    background: $vacant-tint;
-  }
-  50% {
-    border-color: $vacant;
-    background: $vacant-tint-2;
-  }
-}
-
-/** Static orange dot — headers, legends, anywhere off the flat cards. */
+/** Small indigo dot — headers, legends, card states. */
 .dot-vacant {
   display: inline-block;
   width: 8px;
@@ -555,21 +532,10 @@ tfoot td {
   flex: none;
 }
 
-/** Static orange number or word. */
+/** An indigo number or word. */
 .ink-vacant {
   color: $vacant;
   font-weight: 600;
-}
-
-/** The same dot, pulsing. Flat cards only. */
-.blink-dot {
-  display: inline-block;
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: $vacant;
-  flex: none;
-  animation: vacancy-dot 1.8s $ease infinite;
 }
 
 // ---------------------------------------------------------------
@@ -607,18 +573,6 @@ tfoot td {
 
   .k-due {
     background: $due;
-  }
-
-  .k-hall {
-    background: $hall;
-  }
-
-  .k-bed {
-    background: $bed-1;
-  }
-
-  .k-full {
-    background: $gold;
   }
 }
 

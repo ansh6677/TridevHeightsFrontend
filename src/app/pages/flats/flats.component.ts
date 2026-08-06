@@ -13,11 +13,9 @@ import {
 
 type Sheet = 'flat' | 'tenant' | 'receipt' | null;
 
-/** A room plus the colour code it is drawn in. */
+/** A room, plus which of the two kinds of room it is. */
 export interface RoomVM extends RoomView {
   isHall: boolean;
-  /** `tone-hall`, or `tone-1` … `tone-4` cycling through the bedroom palette. */
-  tone: string;
 }
 
 /** One band of rooms on a card: the hall, or the bedrooms. */
@@ -40,12 +38,10 @@ export interface FlatVM extends FlatCard {
 
 /**
  * The hall is the one people ask about first and usually the one with a bed
- * going spare, so it gets its own colour and its own band above the bedrooms.
- * Bedrooms cycle through four tones, so two rooms side by side never read as
- * one long list.
+ * going spare, so it gets its own band above the bedrooms. It used to get its
+ * own colour too, and every bedroom cycled through four more — five hues to
+ * say something the band headings already said.
  */
-const BED_TONES = ['tone-1', 'tone-2', 'tone-3', 'tone-4'];
-
 @Component({
   selector: 'th-flats',
   standalone: true,
@@ -78,8 +74,7 @@ export class FlatsComponent {
   receiptForm = blankReceipt();
 
   /**
-   * Cards redrawn as view models: hall beds split off from bedroom beds, and
-   * every room handed the colour it is rendered in.
+   * Cards redrawn as view models: hall beds split off from bedroom beds.
    */
   readonly views = computed<FlatVM[]>(() =>
     this.cards().map((card) => {
@@ -88,13 +83,9 @@ export class FlatsComponent {
 
       for (const room of card.rooms) {
         if (isHallRoom(room.name)) {
-          halls.push({ ...room, isHall: true, tone: 'tone-hall' });
+          halls.push({ ...room, isHall: true });
         } else {
-          bedrooms.push({
-            ...room,
-            isHall: false,
-            tone: BED_TONES[bedrooms.length % BED_TONES.length]
-          });
+          bedrooms.push({ ...room, isHall: false });
         }
       }
 
@@ -226,6 +217,32 @@ export class FlatsComponent {
     return card.totalSeats === 0
       ? 0
       : Math.round((card.filledSeats / card.totalSeats) * 100);
+  }
+
+  /**
+   * One segment per bed, the taken ones first. Six green blocks and two
+   * indigo gaps is a number you read without reading — "75%" is not, and a
+   * plain bar hides whether the gap is one bed or three.
+   *
+   * Past eighteen beds the segments are too thin to count and the card
+   * falls back to the bar; an empty array is the signal to do that.
+   */
+  seatPips(card: FlatCard): boolean[] {
+    if (card.totalSeats < 1 || card.totalSeats > 18) {
+      return [];
+    }
+    return Array.from({ length: card.totalSeats }, (_, i) => i < card.filledSeats);
+  }
+
+  /** Two letters standing in for a face, so a bed has someone in it. */
+  initials(name: string): string {
+    const parts = name.trim().split(/\s+/).filter(Boolean);
+    if (parts.length === 0) {
+      return '?';
+    }
+    const first = parts[0].charAt(0);
+    const last = parts.length > 1 ? parts[parts.length - 1].charAt(0) : '';
+    return (first + last).toUpperCase();
   }
 
   // -------------------------------------------------------------
