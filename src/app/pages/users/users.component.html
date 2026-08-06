@@ -14,15 +14,13 @@
     </button>
   </div>
 
-  <!-- The 0 and the 1 are what the `role` column stores; they are not what
-       anyone reading this screen needs to know. Two names, everywhere. -->
   <section class="card pane roles">
     <div class="role-note">
-      <span class="pill pill-admin"><th-icon name="key" />Full access</span>
+      <span class="pill pill-admin"><th-icon name="key" />0 · Full access</span>
       <p>Can add flats and tenants, send receipts, log expenses and manage these logins.</p>
     </div>
     <div class="role-note">
-      <span class="pill pill-viewer"><th-icon name="user" />View only</span>
+      <span class="pill pill-viewer"><th-icon name="user" />1 · View only</span>
       <p>
         Sees every screen and every number, but cannot change anything. The server refuses
         their writes, so this holds even if someone edits the page in their browser.
@@ -59,12 +57,9 @@
                 <td class="strong" data-label="Name">{{ u.name }}</td>
                 <td class="muted" data-label="Email">{{ u.email }}</td>
                 <td data-label="Access">
-                  <!-- Named from the role here rather than printed from the
-                       server's own label, so the table can never word it a
-                       third way from the two notes above. -->
                   <span class="pill" [class.pill-admin]="u.role === ADMIN"
                         [class.pill-viewer]="u.role === VIEWER">
-                    {{ u.role === ADMIN ? 'Full access' : 'View only' }}
+                    {{ u.role }} · {{ u.roleLabel }}
                   </span>
                 </td>
                 <td data-label="Status">
@@ -138,8 +133,8 @@
       <div class="field">
         <label for="urole">Access</label>
         <select id="urole" [(ngModel)]="form.role">
-          <option [ngValue]="ADMIN">Full access</option>
-          <option [ngValue]="VIEWER">View only</option>
+          <option [ngValue]="ADMIN">0 — Full access</option>
+          <option [ngValue]="VIEWER">1 — View only</option>
         </select>
       </div>
 

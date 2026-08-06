@@ -93,12 +93,12 @@
     box-shadow: inset 0 0 0 1px rgba(230, 162, 51, 0.34);
   }
 
-  // The hall wears the brand gold on every screen, the same gold its band
-  // on a flat card is drawn in.
-  &.chip-hall {
-    background: $gold-tint;
-    color: $gold-ink;
-    box-shadow: inset 0 0 0 1px $gold-line;
+  // A room is not a status. Anything that counts rooms rather than states
+  // gets this one, and stays out of the way of the four that mean something.
+  &.chip-room {
+    background: $room-tint;
+    color: $room;
+    box-shadow: inset 0 0 0 1px rgba(85, 99, 123, 0.16);
   }
 
   &.chip-vacant {
@@ -498,12 +498,12 @@ tfoot td {
   box-shadow: inset 0 0 0 1px $due-line;
 }
 
-// Every bed taken is the good outcome, and gold is what this brand says
-// "good" in.
+// "Full" is the absence of something to do, so it is drawn as the absence
+// of a colour. Gold here was competing with the green that means paid.
 .pill-full {
-  background: $gold-tint;
-  color: $gold-ink;
-  box-shadow: inset 0 0 0 1px $gold-line;
+  background: $room-tint;
+  color: $room;
+  box-shadow: inset 0 0 0 1px rgba(85, 99, 123, 0.16);
 }
 
 .pill-vacant {
@@ -573,14 +573,6 @@ tfoot td {
 
   .k-due {
     background: $due;
-  }
-
-  .k-hall {
-    background: $gold;
-  }
-
-  .k-bed {
-    background: $navy-bright;
   }
 }
 
