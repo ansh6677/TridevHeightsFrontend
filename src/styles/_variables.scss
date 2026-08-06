@@ -45,9 +45,13 @@ $navy-bright: #3572c4;
 $navy-tint: #eaf1fa;
 $navy-tint-2: #dbe7f6;
 
+$navy-line: rgba(28, 63, 110, 0.18);
+
 $gold: #e6a233;
 $gold-soft: #f6c163;
 $gold-tint: #fdf3df;
+$gold-tint-2: #fae8c6;
+$gold-line: rgba(230, 162, 51, 0.4);
 // Gold is unreadable as text; this is the ink used on any gold tint.
 $gold-ink: #7a5410;
 
@@ -98,14 +102,12 @@ $due-tint: #fdecea;
 $due-line: rgba(198, 42, 31, 0.3);
 
 // ---- Rooms ----
-// One slate for every room, hall included. A room is not a status, so it
-// does not get a status colour; the hall is told apart by its band, its
-// label and its icon, which is what people actually read.
-$room: #55637b;
-$room-tint: #eef1f6;
-
-// Violet is no longer a room colour. It survives as a plain accent for the
-// odd section icon that needs to not be navy.
+// Two kinds of room, two brand colours, no new tokens: bedrooms wear the
+// navy above, the hall wears the gold. That replaced a violet hall and a
+// four-tone bedroom cycle — five hues saying what two headings already did.
+//
+// Violet survives only as a plain accent for the odd section icon that
+// needs to not be navy.
 $hall: #7c3aed;
 $hall-strong: #6127c9;
 $hall-tint: #f3ecff;

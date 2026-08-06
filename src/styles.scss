@@ -395,33 +395,74 @@ input[type='search'] {
   }
 }
 
-// The action that turns a bed from owing to paid. It appears once per
-// unpaid tenant, so on a full board there can be a dozen of them at once —
-// a dozen solid gold blocks was most of why the page looked like a warning
-// sign. Outlined at rest, solid green under the pointer.
+// The action that turns a bed from owing to paid, in the colour money in
+// is drawn in everywhere else on the console. It used to be gold, which
+// put it in the same family as the vacancy orange beside it and made a
+// board of unpaid beds read as one warm blur.
 .btn-money {
-  background: $surface;
-  border-color: $occupied-line;
-  color: $occupied;
+  background: $grad-green;
+  color: #fff;
+  box-shadow: 0 1px 2px rgba(11, 18, 32, 0.14), 0 6px 16px rgba(15, 138, 95, 0.3);
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: inherit;
+    background: $sheen;
+    pointer-events: none;
+  }
+
+  &:hover:not(:disabled) {
+    box-shadow: 0 2px 4px rgba(11, 18, 32, 0.16), 0 10px 24px rgba(15, 138, 95, 0.4);
+    filter: brightness(1.06);
+  }
+
+  &:focus-visible {
+    box-shadow: 0 0 0 3px rgba(15, 138, 95, 0.24);
+  }
+}
+
+// A gold tint rather than a gold fill — for the secondary nudge that sits
+// beside a solid button and must not outshout it.
+.btn-warm {
+  background: $gold-tint;
+  border-color: $gold-line;
+  color: $gold-ink;
 
   .ic {
-    color: $occupied;
+    color: #b07d1c;
     transition: color $speed $ease;
   }
 
   &:hover:not(:disabled) {
-    background: $occupied;
-    border-color: $occupied;
-    color: #fff;
-    box-shadow: 0 4px 12px rgba(15, 138, 95, 0.24);
+    background: $gold-tint-2;
+    border-color: rgba(230, 162, 51, 0.6);
 
     .ic {
-      color: #fff;
+      color: $gold-ink;
     }
   }
 
   &:focus-visible {
-    box-shadow: 0 0 0 3px rgba(15, 138, 95, 0.22);
+    box-shadow: $ring-gold;
+  }
+}
+
+// An indigo tint, for anything that acts on an empty bed.
+.btn-vacancy {
+  background: $vacant-tint;
+  border-color: $vacant-line;
+  color: $vacant-strong;
+
+  &:hover:not(:disabled) {
+    background: $vacant-tint-2;
+    border-color: $vacant;
+  }
+
+  &:focus-visible {
+    box-shadow: 0 0 0 3px $vacant-glow;
   }
 }
 
