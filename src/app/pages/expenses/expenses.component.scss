@@ -1,4 +1,6 @@
-@use '../../../styles/page' as *;
+// page.scss is loaded once from styles.scss, not per component — pulling it
+// in here put a second copy of every table, pill and modal rule inside the
+// expenses bundle, which is what kept this file at its size budget.
 @use '../../../styles/variables' as *;
 
 // One line: amount, remark, who, date, button. Adding should take seconds.

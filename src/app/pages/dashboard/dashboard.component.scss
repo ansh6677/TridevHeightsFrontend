@@ -248,16 +248,34 @@
     background: transparent;
   }
 
-  &.tone-green::before {
-    background: $grad-green;
+  // Each tone gets its rail and a wash of the same colour running off it,
+  // so the figure sits on a card that is already the right colour before
+  // you have read it. A white box with a 4px stripe was easy to skim past.
+  &.tone-green {
+    border-color: $occupied-line;
+    background: linear-gradient(120deg, $occupied-tint 0%, rgba(255, 255, 255, 0) 66%), $surface;
+
+    &::before {
+      background: $grad-green;
+    }
   }
 
-  &.tone-red::before {
-    background: $grad-red;
+  &.tone-red {
+    border-color: $due-line;
+    background: linear-gradient(120deg, $due-tint 0%, rgba(255, 255, 255, 0) 66%), $surface;
+
+    &::before {
+      background: $grad-red;
+    }
   }
 
-  &.tone-navy::before {
-    background: $grad-primary;
+  &.tone-navy {
+    border-color: rgba(28, 63, 110, 0.18);
+    background: linear-gradient(120deg, $navy-tint 0%, rgba(255, 255, 255, 0) 66%), $surface;
+
+    &::before {
+      background: $grad-primary;
+    }
   }
 }
 
