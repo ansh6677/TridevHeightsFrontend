@@ -1,0 +1,108 @@
+<div class="page">
+  @if (toast(); as t) {
+    <div class="toast" [class.bad]="t.bad" role="status">{{ t.text }}</div>
+  }
+
+  <div class="page-head">
+    <div>
+      <h1>Expenses</h1>
+      <p class="page-sub">Everything that comes off the month's collection.</p>
+
+      <div class="chips">
+        <span class="chip chip-navy">
+          <b>{{ expenses().length }}</b>
+          {{ expenses().length === 1 ? 'entry' : 'entries' }}
+        </span>
+        <span class="chip chip-red">
+          Rs. <b>{{ total() | number: '1.0-0' }}</b> spent
+        </span>
+      </div>
+    </div>
+    <input class="month-pick" type="month" [ngModel]="month()"
+           (ngModelChange)="month.set($event); load()" />
+  </div>
+
+  @if (auth.isAdmin()) {
+  <section class="card pane">
+    <div class="quick">
+      <div class="field amt">
+        <label for="amt">Amount (Rs.)</label>
+        <input id="amt" type="number" min="0" placeholder="8200" [(ngModel)]="form.amount" />
+      </div>
+
+      <div class="field rem">
+        <label for="rem">Remark</label>
+        <input id="rem" type="text" placeholder="Electricity bill for August"
+               [(ngModel)]="form.remark" (keyup.enter)="add()" />
+      </div>
+
+      <div class="field dt">
+        <label for="dt">Date</label>
+        <input id="dt" type="date" [(ngModel)]="form.expenseDate" />
+      </div>
+
+      <button type="button" class="btn btn-primary" [disabled]="busy()" (click)="add()">
+        {{ busy() ? 'Adding…' : 'Add' }}
+      </button>
+    </div>
+
+    @if (formError(); as err) {
+      <p class="error-text" role="alert">{{ err }}</p>
+    }
+  </section>
+  }
+
+  <section class="card pane">
+    @if (loading()) {
+      <p class="muted">Loading…</p>
+    } @else if (expenses().length === 0) {
+      <div class="empty">
+        <p>Nothing logged this month.</p>
+        <p class="empty-sub">
+          Add electricity, salaries or repairs. Every entry comes straight off the dashboard
+          net figure.
+        </p>
+      </div>
+    } @else {
+      <div class="table-wrap stacked">
+        <table class="slim">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Remark</th>
+              <th class="num">Amount</th>
+              <th class="row-actions"></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (e of expenses(); track e.id) {
+              <tr>
+                <td class="muted nowrap" data-label="Date">
+                  {{ e.expenseDate | date: 'dd MMM yy' }}
+                </td>
+                <td class="strong" data-label="Remark">{{ e.remark }}</td>
+                <td class="num strong out" data-label="Amount">
+                  Rs. {{ e.amount | number: '1.0-0' }}
+                </td>
+                <td class="row-actions">
+                  @if (auth.isAdmin()) {
+                    <button type="button" class="link danger" (click)="remove(e)">Delete</button>
+                  }
+                </td>
+              </tr>
+            }
+          </tbody>
+          <tfoot>
+            <tr>
+              <td colspan="2" class="strong total-label">Total off this month</td>
+              <td class="num strong out" data-label="Total">
+                Rs. {{ total() | number: '1.0-0' }}
+              </td>
+              <td></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    }
+  </section>
+</div>

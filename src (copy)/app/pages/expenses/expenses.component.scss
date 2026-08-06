@@ -1,0 +1,82 @@
+@use '../../../styles/variables' as *;
+
+.month-pick {
+  width: auto;
+  min-width: 170px;
+  align-self: center;
+}
+
+// Every amount on this screen is money going out, so every amount is red.
+td.out {
+  color: $due;
+}
+
+tbody tr {
+  border-left: 3px solid $due-tint;
+}
+
+tbody tr:hover {
+  background: rgba(179, 38, 30, 0.035);
+  border-left-color: $due;
+}
+
+// One line: amount, remark, date, button. Adding an expense should take seconds.
+.quick {
+  display: grid;
+  grid-template-columns: 150px minmax(0, 1fr) 165px auto;
+  gap: 12px;
+  align-items: end;
+}
+
+table.slim {
+  min-width: 460px;
+}
+
+tfoot td {
+  padding: 12px;
+  border-top: 2px solid $due-line;
+  background: $due-tint;
+}
+
+@media (max-width: 760px) {
+  .quick {
+    grid-template-columns: 1fr 1fr;
+
+    .rem {
+      grid-column: span 2;
+    }
+
+    button {
+      grid-column: span 2;
+      padding-block: 14px;
+    }
+  }
+
+  // As cards, each entry gets the full red edge rather than the tint.
+  tbody tr {
+    border-left-color: $due;
+  }
+
+  tfoot tr {
+    background: $due-tint;
+    border-color: $due-line;
+    border-left-color: $due;
+  }
+
+  .total-label {
+    display: none;
+  }
+}
+
+// One field per line on a phone — a half-width amount box next to an empty
+// gap is worse than simply stacking them.
+@media (max-width: 560px) {
+  .quick {
+    grid-template-columns: 1fr;
+
+    .rem,
+    button {
+      grid-column: span 1;
+    }
+  }
+}

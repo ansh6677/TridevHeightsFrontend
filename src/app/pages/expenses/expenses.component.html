@@ -1,0 +1,186 @@
+<div class="page">
+  @if (toast(); as t) {
+    <div class="toast" [class.bad]="t.bad" role="status">{{ t.text }}</div>
+  }
+
+  <div class="page-head">
+    <div>
+      <h1>Expenses</h1>
+      <p class="page-sub">
+        {{ expenses().length }} logged · Rs. {{ total() | number: '1.0-0' }}
+        @if (payerFilter()) {
+          under {{ payerFilter() }}
+        }
+      </p>
+
+      <div class="chips">
+        <span class="chip chip-red">
+          Rs. <b>{{ total() | number: '1.0-0' }}</b> out
+        </span>
+        <span class="chip">
+          <b>{{ expenses().length }}</b>
+          {{ expenses().length === 1 ? 'entry' : 'entries' }}
+        </span>
+      </div>
+    </div>
+
+    <button type="button" class="btn btn-ghost btn-sm"
+            [disabled]="expenses().length === 0" (click)="exportCsv()">
+      <th-icon name="download" />
+      Download CSV
+    </button>
+  </div>
+
+  @if (auth.isAdmin()) {
+    <section class="card pane">
+      <div class="pane-head">
+        <h2>
+          <span class="pane-ico ico-red"><th-icon name="plus" /></span>
+          Log an expense
+        </h2>
+      </div>
+
+      <div class="quick">
+        <div class="field amt">
+          <label for="amt">Amount (Rs.)</label>
+          <input id="amt" type="number" min="0" placeholder="8200" [(ngModel)]="form.amount" />
+        </div>
+
+        <div class="field rem">
+          <label for="rem">Remark</label>
+          <input id="rem" type="text" placeholder="Electricity bill for August"
+                 [(ngModel)]="form.remark" (keyup.enter)="add()" />
+        </div>
+
+        <div class="field who">
+          <label for="paidby">Paid by</label>
+          <select id="paidby" [(ngModel)]="form.paidBy">
+            <option value="">Select…</option>
+            @for (p of payers; track p) {
+              <option [value]="p">{{ p }}</option>
+            }
+          </select>
+        </div>
+
+        <div class="field dt">
+          <label for="dt">Date</label>
+          <input id="dt" type="date" [(ngModel)]="form.expenseDate" />
+        </div>
+
+        <button type="button" class="btn btn-primary" [disabled]="busy()" (click)="add()">
+          <th-icon name="plus" />
+          {{ busy() ? 'Adding…' : 'Add' }}
+        </button>
+      </div>
+
+      @if (formError(); as err) {
+        <p class="error-text" role="alert">{{ err }}</p>
+      }
+    </section>
+  }
+
+  <section class="card pane">
+    <div class="pane-head">
+      <h2>
+        <span class="pane-ico ico-red"><th-icon name="wallet" /></span>
+        Money out
+      </h2>
+    </div>
+
+    <div class="filters">
+      <div class="field">
+        <label for="fmonth">Month</label>
+        <input id="fmonth" type="month" [ngModel]="month()"
+               (ngModelChange)="month.set($event); load()" />
+      </div>
+
+      <div class="field">
+        <label for="fpayer">Paid by</label>
+        <select id="fpayer" [ngModel]="payerFilter()"
+                (ngModelChange)="payerFilter.set($event); load()">
+          <option value="">Everyone</option>
+          @for (p of payers; track p) {
+            <option [value]="p">{{ p }}</option>
+          }
+        </select>
+      </div>
+
+      @if (payerFilter()) {
+        <button type="button" class="btn btn-ghost btn-sm clear" (click)="clearFilters()">
+          <th-icon name="close" />
+          Clear filter
+        </button>
+      }
+    </div>
+
+    @if (byPayer().length > 0) {
+      <div class="split">
+        @for (row of byPayer(); track row.name) {
+          <div class="split-chip">
+            <span class="sp-name">{{ row.name }}</span>
+            <span class="sp-amt">Rs. {{ row.amount | number: '1.0-0' }}</span>
+          </div>
+        }
+      </div>
+    }
+
+    @if (loading()) {
+      <div class="skeleton sk-table"></div>
+    } @else if (expenses().length === 0) {
+      <div class="empty">
+        <span class="empty-ico"><th-icon name="inbox" /></span>
+        <p>Nothing here.</p>
+        <p class="empty-sub">
+          @if (payerFilter()) {
+            No expenses under {{ payerFilter() }} for this month. Try clearing the filter.
+          } @else {
+            Add electricity, salaries or repairs. Every entry comes straight off the
+            dashboard net figure.
+          }
+        </p>
+      </div>
+    } @else {
+      <!-- Header and total stay pinned; the entries scroll between them, so
+           the card is the same height at three entries and at three hundred. -->
+      <div class="table-wrap scroll">
+        <table class="slim">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Remark</th>
+              <th>Paid by</th>
+              <th class="num">Amount</th>
+              <th class="row-actions"></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (e of expenses(); track e.id) {
+              <tr>
+                <td class="muted nowrap">{{ e.expenseDate | date: 'dd MMM yy' }}</td>
+                <td class="strong">{{ e.remark }}</td>
+                <td><span class="pill pill-payer">{{ e.paidBy }}</span></td>
+                <td class="num strong out">Rs. {{ e.amount | number: '1.0-0' }}</td>
+                <td class="row-actions">
+                  @if (auth.isAdmin()) {
+                    <button type="button" class="link danger" title="Delete this entry"
+                            (click)="remove(e)">
+                      <th-icon name="trash" />
+                      Delete
+                    </button>
+                  }
+                </td>
+              </tr>
+            }
+          </tbody>
+          <tfoot>
+            <tr>
+              <td colspan="3" class="strong">Total</td>
+              <td class="num strong">Rs. {{ total() | number: '1.0-0' }}</td>
+              <td></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    }
+  </section>
+</div>

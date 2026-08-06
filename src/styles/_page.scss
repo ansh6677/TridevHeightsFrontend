@@ -1,0 +1,946 @@
+// Shared page chrome — imported by every page component so the console
+// looks like one product rather than four screens.
+@use 'variables' as *;
+
+// Wide enough to use the room a narrowed sidebar gives back, still narrow
+// enough that a line of text does not run away from the eye.
+.page {
+  max-width: 1320px;
+  margin: 0 auto;
+  padding: 26px clamp(14px, 2.4vw, 32px) 60px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.page-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid $line;
+
+  h1 {
+    font-size: clamp(24px, 2.6vw, 30px);
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    background: linear-gradient(120deg, $ink 25%, $navy 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .page-sub {
+    margin: 6px 0 0;
+    font-size: 13.5px;
+    color: $muted;
+  }
+}
+
+// ---- Head chips: the headline numbers, colour coded ----
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-top: 11px;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+  font-weight: 600;
+  padding: 5px 12px;
+  border-radius: $radius-pill;
+  background: rgba(11, 18, 32, 0.05);
+  color: $muted;
+  font-variant-numeric: tabular-nums;
+  box-shadow: inset 0 0 0 1px rgba(11, 18, 32, 0.05);
+  transition: transform $speed $ease;
+
+  b {
+    font-weight: 700;
+  }
+
+  &:hover {
+    transform: translateY(-1px);
+  }
+
+  &.chip-navy {
+    background: $navy-tint;
+    color: $navy;
+    box-shadow: inset 0 0 0 1px rgba(28, 63, 110, 0.16);
+  }
+
+  &.chip-green {
+    background: $occupied-tint;
+    color: $occupied;
+    box-shadow: inset 0 0 0 1px $occupied-line;
+  }
+
+  &.chip-red {
+    background: $due-tint;
+    color: $due;
+    box-shadow: inset 0 0 0 1px $due-line;
+  }
+
+  &.chip-gold {
+    background: $gold-tint;
+    color: $gold-ink;
+    box-shadow: inset 0 0 0 1px rgba(230, 162, 51, 0.34);
+  }
+
+  &.chip-hall {
+    background: $hall-tint;
+    color: $hall-strong;
+    box-shadow: inset 0 0 0 1px $hall-line;
+  }
+
+  // Orange, but still. The blink is kept for the flat cards alone, where
+  // it points at the actual empty bed; everywhere else the colour is enough.
+  &.chip-vacant {
+    background: $vacant-tint;
+    color: $vacant-strong;
+    box-shadow: inset 0 0 0 1px $vacant-line;
+  }
+}
+
+.card {
+  position: relative;
+  background: $surface;
+  border: 1px solid $line;
+  border-radius: $radius;
+  box-shadow: $shadow-sm;
+}
+
+.pane {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+
+.pane-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+
+  h2 {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    font-size: 16.5px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+  }
+}
+
+// A small tinted square behind a section's icon. Same shape everywhere,
+// the tint says which kind of number the section is about.
+.pane-ico {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  flex: none;
+  border-radius: $radius-xs;
+  background: $navy-tint;
+  color: $navy;
+
+  .ic {
+    width: 16px;
+    height: 16px;
+  }
+
+  &.ico-green {
+    background: $occupied-tint;
+    color: $occupied;
+  }
+
+  &.ico-red {
+    background: $due-tint;
+    color: $due;
+  }
+
+  &.ico-gold {
+    background: $gold-tint;
+    color: $gold-ink;
+  }
+
+  &.ico-vacant {
+    background: $vacant-tint;
+    color: $vacant-strong;
+  }
+
+  &.ico-hall {
+    background: $hall-tint;
+    color: $hall-strong;
+  }
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 14px;
+}
+
+.span-2 {
+  grid-column: span 2;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px;
+}
+
+.opt {
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: 0;
+  opacity: 0.7;
+}
+
+.toast {
+  position: sticky;
+  top: 14px;
+  z-index: 30;
+  align-self: center;
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  background: rgba(11, 18, 32, 0.94);
+  backdrop-filter: blur(8px);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 500;
+  padding: 12px 20px;
+  border-radius: $radius-pill;
+  box-shadow: $shadow-md;
+  border-left: 3px solid $gold;
+  animation: drop 0.32s $ease both;
+}
+
+.toast.bad {
+  border-left-color: #ff6b5e;
+}
+
+@keyframes drop {
+  from {
+    opacity: 0;
+    transform: translateY(-12px) scale(0.97);
+  }
+}
+
+// ===============================================================
+//  Scroll frames
+//
+//  The point of these: a card that holds a list keeps the same height
+//  whether the list has three rows or three hundred. The list scrolls
+//  inside the card instead of the card growing down the page, so a row
+//  of cards stays a row of cards and nothing jumps when an entry is
+//  added.
+//
+//  --h is the height of the frame; set it per use where the default
+//  does not suit.
+// ===============================================================
+.scroll-y {
+  --h: #{$scroll};
+
+  max-height: var(--h);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+  padding-right: 6px;
+  margin-right: -6px;
+
+  // Classic scroll shadows: the white caps are pinned to the content, the
+  // grey feathers to the frame, so a shadow only appears on the edge that
+  // actually has more content past it.
+  background:
+    linear-gradient($surface 30%, rgba(255, 255, 255, 0)) center top,
+    linear-gradient(rgba(255, 255, 255, 0), $surface 70%) center bottom,
+    radial-gradient(farthest-side at 50% 0, rgba(11, 18, 32, 0.13), rgba(11, 18, 32, 0)) center top,
+    radial-gradient(farthest-side at 50% 100%, rgba(11, 18, 32, 0.13), rgba(11, 18, 32, 0)) center
+      bottom;
+  background-repeat: no-repeat;
+  background-size: 100% 30px, 100% 30px, 100% 11px, 100% 11px;
+  background-attachment: local, local, scroll, scroll;
+
+  &.scroll-sm {
+    --h: #{$scroll-sm};
+  }
+
+  &.scroll-lg {
+    --h: #{$scroll-lg};
+  }
+
+  // Inside a flex column, fill whatever is left of the card and scroll the
+  // overflow — this is what keeps two cards side by side the same height.
+  &.scroll-fill {
+    flex: 1 1 auto;
+    min-height: 0;
+  }
+}
+
+// The little "N more below" line under a scroll frame, so a list that is
+// cut off says so instead of looking complete.
+.scroll-note {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin: 0;
+  font-size: 12px;
+  font-weight: 500;
+  color: $muted;
+
+  .ic {
+    width: 13px;
+    height: 13px;
+  }
+}
+
+// ---- Tables ----
+.table-wrap {
+  overflow-x: auto;
+  border: 1px solid $line;
+  border-radius: $radius-sm;
+  background: $surface;
+}
+
+// A table that scrolls in place, header pinned. Long months of receipts no
+// longer push the page down forever.
+.table-wrap.scroll {
+  --h: #{$scroll-lg};
+
+  max-height: var(--h);
+  overflow: auto;
+  overscroll-behavior: contain;
+
+  thead th {
+    position: sticky;
+    top: 0;
+    z-index: 3;
+  }
+
+  tfoot td {
+    position: sticky;
+    bottom: 0;
+    z-index: 2;
+  }
+}
+
+table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 14px;
+  min-width: 640px;
+}
+
+thead th {
+  background: $surface-2;
+  text-align: left;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: $muted;
+  padding: 12px;
+  box-shadow: inset 0 -1px 0 $line;
+  white-space: nowrap;
+}
+
+tbody td {
+  padding: 12px;
+  box-shadow: inset 0 -1px 0 rgba(11, 18, 32, 0.05);
+  vertical-align: middle;
+}
+
+tbody tr:last-child td {
+  box-shadow: none;
+}
+
+tbody tr {
+  transition: background $speed-fast $ease;
+}
+
+tbody tr:hover {
+  background: rgba(53, 114, 196, 0.045);
+}
+
+tfoot td {
+  padding: 12px;
+  background: $surface-2;
+  box-shadow: inset 0 1px 0 $line;
+  font-weight: 600;
+}
+
+.num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.strong {
+  font-weight: 600;
+}
+
+.muted {
+  color: $muted;
+}
+
+.mono {
+  font-family: $font-mono;
+  font-size: 12.5px;
+}
+
+.nowrap {
+  white-space: nowrap;
+}
+
+.row-actions {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.link {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: none;
+  border: none;
+  font-family: $font-body;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: $navy;
+  text-decoration: none;
+  cursor: pointer;
+  padding: 5px 9px;
+  border-radius: $radius-xs;
+  vertical-align: middle;
+  transition: background $speed $ease, color $speed $ease;
+
+  .ic {
+    width: 14px;
+    height: 14px;
+  }
+
+  &:hover:not(:disabled) {
+    background: rgba(53, 114, 196, 0.1);
+    color: $navy-bright;
+  }
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: $ring;
+  }
+
+  &.danger {
+    color: $danger;
+
+    &:hover:not(:disabled) {
+      background: $danger-tint;
+      color: $danger;
+    }
+  }
+}
+
+// ---- Pills ----
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  padding: 3px 10px;
+  border-radius: $radius-pill;
+  white-space: nowrap;
+}
+
+.pill-active {
+  background: $occupied-tint;
+  color: $occupied;
+  box-shadow: inset 0 0 0 1px $occupied-line;
+}
+
+.pill-vacated {
+  background: rgba(11, 18, 32, 0.06);
+  color: $muted;
+  box-shadow: inset 0 0 0 1px rgba(11, 18, 32, 0.08);
+}
+
+// ---------------------------------------------------------------
+//  Status pills — the same five colours mean the same five things
+//  on every screen of the console.
+// ---------------------------------------------------------------
+.pill-paid {
+  background: $occupied-tint;
+  color: $occupied;
+  box-shadow: inset 0 0 0 1px $occupied-line;
+}
+
+.pill-due {
+  background: $due-tint;
+  color: $due;
+  box-shadow: inset 0 0 0 1px $due-line;
+}
+
+.pill-full {
+  background: $gold-tint;
+  color: $gold-ink;
+  box-shadow: inset 0 0 0 1px rgba(230, 162, 51, 0.4);
+}
+
+.pill-hall {
+  background: $hall-tint;
+  color: $hall-strong;
+  box-shadow: inset 0 0 0 1px $hall-line;
+}
+
+.pill-vacant {
+  background: $vacant-tint;
+  color: $vacant-strong;
+  box-shadow: inset 0 0 0 1px $vacant-line;
+}
+
+// ---------------------------------------------------------------
+//  Vacancy marks
+//
+//  The blink lives on the flat cards only — beside the empty bed it is
+//  actually talking about. Elsewhere a vacancy is simply orange. One
+//  blinking thing on a screen is a signal; ten is wallpaper.
+// ---------------------------------------------------------------
+@keyframes vacancy-dot {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(234, 88, 12, 0);
+  }
+  50% {
+    box-shadow: 0 0 0 5px $vacant-glow;
+  }
+}
+
+@keyframes vacancy-edge {
+  0%,
+  100% {
+    border-color: $vacant-line;
+    background: $vacant-tint;
+  }
+  50% {
+    border-color: $vacant;
+    background: $vacant-tint-2;
+  }
+}
+
+/** Static orange dot — headers, legends, anywhere off the flat cards. */
+.dot-vacant {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: $vacant;
+  flex: none;
+}
+
+/** Static orange number or word. */
+.ink-vacant {
+  color: $vacant;
+  font-weight: 600;
+}
+
+/** The same dot, pulsing. Flat cards only. */
+.blink-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: $vacant;
+  flex: none;
+  animation: vacancy-dot 1.8s $ease infinite;
+}
+
+// ---------------------------------------------------------------
+//  Colour key — printed on the screens that use the code
+// ---------------------------------------------------------------
+.key {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 7px 16px;
+  font-size: 12px;
+  color: $muted;
+
+  span {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+  }
+
+  i {
+    width: 10px;
+    height: 10px;
+    border-radius: 3px;
+    flex: none;
+  }
+
+  .k-vacant {
+    background: $vacant;
+  }
+
+  .k-paid {
+    background: $occupied;
+  }
+
+  .k-due {
+    background: $due;
+  }
+
+  .k-hall {
+    background: $hall;
+  }
+
+  .k-bed {
+    background: $bed-1;
+  }
+
+  .k-full {
+    background: $gold;
+  }
+}
+
+// ---- Empty ----
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  text-align: center;
+  padding: 38px 22px;
+  border: 1px dashed $line-2;
+  border-radius: $radius-sm;
+  background: linear-gradient(180deg, $surface-2, $surface);
+
+  .empty-ico {
+    display: grid;
+    place-items: center;
+    width: 42px;
+    height: 42px;
+    margin-bottom: 8px;
+    border-radius: $radius-sm;
+    background: $surface-3;
+    color: $muted;
+
+    .ic {
+      width: 20px;
+      height: 20px;
+    }
+  }
+
+  p {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 600;
+    color: $ink;
+  }
+
+  .empty-sub {
+    margin-top: 4px;
+    max-width: 42ch;
+    font-size: 13.5px;
+    font-weight: 400;
+    line-height: 1.55;
+    color: $muted;
+  }
+}
+
+// ---------------------------------------------------------------
+//  Tables become cards on a phone
+//
+//  A table with six columns on a 380px screen is a sideways scroll and a
+//  guessing game. Below 760px each row is restacked as its own little card
+//  with the column name printed beside every value, so nothing has to be
+//  remembered from a header that has scrolled off.
+// ---------------------------------------------------------------
+@media (max-width: 760px) {
+  .table-wrap.stacked {
+    border: none;
+    border-radius: 0;
+    overflow: visible;
+    max-height: none;
+    background: transparent;
+
+    table {
+      min-width: 0;
+      display: block;
+    }
+
+    thead {
+      display: none;
+    }
+
+    tbody,
+    tfoot {
+      display: block;
+    }
+
+    tbody tr,
+    tfoot tr {
+      display: block;
+      background: $surface;
+      border: 1px solid $line;
+      border-left-width: 3px;
+      border-radius: $radius-sm;
+      padding: 11px 14px;
+      margin-bottom: 10px;
+      box-shadow: $shadow-xs;
+    }
+
+    tbody td,
+    tfoot td {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 14px;
+      padding: 4px 0;
+      border: none;
+      box-shadow: none;
+      background: transparent;
+      text-align: left;
+
+      &::before {
+        content: attr(data-label);
+        flex: none;
+        font-size: 10.5px;
+        font-weight: 600;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        color: $muted;
+      }
+
+      &:empty {
+        display: none;
+      }
+    }
+
+    .num {
+      text-align: right;
+    }
+
+    .row-actions {
+      justify-content: flex-end;
+      gap: 2px;
+      padding-top: 8px;
+      margin-top: 4px;
+      border-top: 1px solid $line;
+
+      &::before {
+        margin-right: auto;
+      }
+    }
+  }
+
+  // Stacked rows are their own cards; scrolling them inside a frame as
+  // well would be a box inside a box.
+  .table-wrap.stacked.scroll {
+    overflow: visible;
+  }
+}
+
+@media (max-width: 700px) {
+  .page {
+    padding: 18px 14px 44px;
+  }
+
+  .pane {
+    padding: 16px;
+  }
+
+  .span-2 {
+    grid-column: span 1;
+  }
+
+  .page-head {
+    align-items: stretch;
+
+    > .btn {
+      width: 100%;
+    }
+  }
+
+  .key {
+    font-size: 11.5px;
+    gap: 6px 12px;
+  }
+
+  // Shorter frames on a phone: the viewport is the scarce thing there.
+  .scroll-y {
+    --h: 300px;
+
+    &.scroll-sm {
+      --h: 230px;
+    }
+
+    &.scroll-lg {
+      --h: 360px;
+    }
+  }
+}
+
+// ---- Modals on a phone: a sheet off the bottom, easier to reach ----
+@media (max-width: 560px) {
+  .backdrop {
+    padding: 0;
+    place-items: end stretch;
+  }
+
+  .modal {
+    max-width: none;
+    border-radius: $radius-lg $radius-lg 0 0;
+    padding: 22px 18px calc(22px + env(safe-area-inset-bottom));
+    max-height: 92dvh;
+    overflow-y: auto;
+    animation: sheet 0.28s $ease both;
+  }
+
+  // The grab handle every phone sheet has.
+  .modal::after {
+    content: '';
+    position: absolute;
+    top: 9px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 38px;
+    height: 4px;
+    border-radius: $radius-pill;
+    background: rgba(11, 18, 32, 0.16);
+  }
+
+  .actions .btn {
+    flex: 1 1 140px;
+  }
+}
+
+@keyframes sheet {
+  from {
+    opacity: 0;
+    transform: translateY(28px);
+  }
+}
+
+// ---------------------------------------------------------------
+//  Modal
+// ---------------------------------------------------------------
+.backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  background: rgba(7, 13, 24, 0.52);
+  backdrop-filter: blur(5px);
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  overflow-y: auto;
+  animation: fade 0.22s $ease both;
+}
+
+.modal {
+  position: relative;
+  width: 100%;
+  max-width: 480px;
+  background: $surface;
+  border-radius: $radius-lg;
+  box-shadow: $shadow-lg;
+  padding: 26px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  overflow: hidden;
+  animation: pop 0.28s $ease both;
+}
+
+.modal::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto;
+  height: 4px;
+  background: $grad-gold;
+}
+
+.modal-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+
+  h3 {
+    font-family: $font-heading;
+    font-size: 18.5px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    margin: 0;
+  }
+
+  p {
+    margin: 5px 0 0;
+    font-size: 13px;
+    color: $muted;
+  }
+}
+
+.x {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  flex: none;
+  background: none;
+  border: none;
+  font-size: 19px;
+  line-height: 1;
+  color: $muted;
+  cursor: pointer;
+  border-radius: $radius-xs;
+  transition: background $speed $ease, color $speed $ease;
+
+  .ic {
+    width: 17px;
+    height: 17px;
+  }
+
+  &:hover {
+    background: rgba(11, 18, 32, 0.06);
+    color: $ink;
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: $ring;
+  }
+}
+
+@keyframes fade {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes pop {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.97);
+  }
+}

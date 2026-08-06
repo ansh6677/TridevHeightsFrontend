@@ -1,0 +1,131 @@
+<div class="page">
+  @if (toast(); as t) {
+    <div class="toast" [class.bad]="t.bad" role="status">{{ t.text }}</div>
+  }
+
+  <div class="page-head">
+    <div>
+      <h1>Logins</h1>
+      <p class="page-sub">Who can sign in, and what they are allowed to do.</p>
+    </div>
+    <button type="button" class="btn btn-primary" (click)="openNew()">Add login</button>
+  </div>
+
+  <section class="card pane roles">
+    <div class="role-note">
+      <span class="pill pill-admin">Full access</span>
+      <p>Can add flats and tenants, send receipts, log expenses and manage these logins.</p>
+    </div>
+    <div class="role-note">
+      <span class="pill pill-viewer">View only</span>
+      <p>
+        Sees every screen and every number, but cannot change anything. The server refuses
+        their writes, so this holds even if someone edits the page in their browser.
+      </p>
+    </div>
+  </section>
+
+  <section class="card pane">
+    @if (loading()) {
+      <p class="muted">Loading…</p>
+    } @else {
+      <div class="table-wrap stacked">
+        <table>
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Email</th>
+              <th>Access</th>
+              <th>Status</th>
+              <th class="row-actions"></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (u of users(); track u.id) {
+              <tr [class.off]="!u.active">
+                <td class="strong" data-label="Name">{{ u.name }}</td>
+                <td class="muted" data-label="Email">{{ u.email }}</td>
+                <td data-label="Access">
+                  <span class="pill" [class.pill-admin]="u.role === ADMIN"
+                        [class.pill-viewer]="u.role === VIEWER">
+                    {{ u.roleLabel || (u.role === ADMIN ? 'Full access' : 'View only') }}
+                  </span>
+                </td>
+                <td data-label="Status">
+                  <span class="pill" [class.pill-active]="u.active"
+                        [class.pill-vacated]="!u.active">
+                    {{ u.active ? 'Active' : 'Deactivated' }}
+                  </span>
+                </td>
+                <td class="row-actions">
+                  <button type="button" class="link" (click)="openEdit(u)">Edit</button>
+                  <button type="button" class="link" (click)="toggleActive(u)">
+                    {{ u.active ? 'Deactivate' : 'Reactivate' }}
+                  </button>
+                  <button type="button" class="link danger" (click)="remove(u)">Delete</button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </section>
+</div>
+
+@if (sheetOpen()) {
+  <div class="backdrop" (click)="close()">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <div class="modal-head">
+        <div>
+          <h3>{{ editing() ? 'Edit login' : 'Add a login' }}</h3>
+          <p>{{ editing() ? 'Leave the password blank to keep the current one.' : 'They sign in with this email and password.' }}</p>
+        </div>
+        <button type="button" class="x" aria-label="Close" (click)="close()">&times;</button>
+      </div>
+
+      <div class="field">
+        <label for="uname">Name</label>
+        <input id="uname" type="text" placeholder="Prashant" [(ngModel)]="form.name" />
+      </div>
+
+      <div class="field">
+        <label for="uemail">Email</label>
+        <input id="uemail" type="email" autocapitalize="none" placeholder="prashant@tridevheights.com"
+               [(ngModel)]="form.email" />
+      </div>
+
+      <div class="field">
+        <label for="upass">
+          Password
+          @if (editing()) {
+            <span class="opt">leave blank to keep current</span>
+          } @else {
+            <span class="opt">at least 8 characters</span>
+          }
+        </label>
+        <input id="upass" type="text" autocomplete="new-password" placeholder="••••••••"
+               [(ngModel)]="form.password" />
+      </div>
+
+      <div class="field">
+        <label for="urole">Access</label>
+        <select id="urole" [(ngModel)]="form.role">
+          <option [ngValue]="ADMIN">Full access</option>
+          <option [ngValue]="VIEWER">View only</option>
+        </select>
+      </div>
+
+      @if (sheetError(); as err) {
+        <p class="error-text" role="alert">{{ err }}</p>
+      }
+
+      <div class="actions">
+        <button type="button" class="btn btn-primary" [disabled]="busy()" (click)="save()">
+          {{ busy() ? 'Saving…' : editing() ? 'Save changes' : 'Add login' }}
+        </button>
+        <button type="button" class="btn btn-ghost" (click)="close()">Cancel</button>
+      </div>
+    </div>
+  </div>
+}

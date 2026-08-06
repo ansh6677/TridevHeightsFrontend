@@ -1,0 +1,564 @@
+<div class="page">
+  <div class="page-head">
+    <div>
+      <h1>Dashboard</h1>
+      <p class="page-sub">
+        @if (data(); as d) {
+          {{ d.monthLabel }} · {{ d.flatCount }}
+          {{ d.flatCount === 1 ? 'flat' : 'flats' }} ·
+          {{ d.receiptsThisMonth }} {{ d.receiptsThisMonth === 1 ? 'receipt' : 'receipts' }} sent
+        } @else {
+          Loading…
+        }
+      </p>
+
+      @if (data(); as d) {
+        <div class="chips">
+          <span class="chip chip-green">
+            <b>{{ d.filledSeats }}</b> beds filled
+          </span>
+
+          @if (d.vacantSeats > 0) {
+            <span class="chip chip-vacant">
+              <b>{{ d.vacantSeats }}</b>
+              {{ d.vacantSeats === 1 ? 'bed' : 'beds' }} vacant
+            </span>
+          } @else {
+            <span class="chip chip-gold">Every bed is full</span>
+          }
+
+          @if (d.pendingTenants.length > 0) {
+            <span class="chip chip-red">
+              <b>{{ d.pendingTenants.length }}</b> yet to pay
+            </span>
+          } @else {
+            <span class="chip chip-green">Everyone has paid</span>
+          }
+        </div>
+      }
+    </div>
+
+    <div class="head-tools">
+      <input class="month-pick" type="month" aria-label="Month to show"
+             [ngModel]="month()" (ngModelChange)="setMonth($event)" />
+
+      @if (data() && !isCurrent()) {
+        <button type="button" class="btn btn-ghost btn-sm" (click)="jumpToThisMonth()">
+          <th-icon name="calendar" />
+          Back to this month
+        </button>
+      }
+
+      <button type="button" class="btn btn-ghost btn-sm" [disabled]="!data()"
+              (click)="exportMonthsCsv()" title="Download the month-by-month table">
+        <th-icon name="download" />
+        Download CSV
+      </button>
+
+      <button type="button" class="refresh" [disabled]="loading()" (click)="load()"
+              title="Reload the numbers">
+        <th-icon name="refresh" [class.spin]="loading()" />
+        <span>{{ loading() ? 'Refreshing…' : 'Refresh' }}</span>
+      </button>
+    </div>
+  </div>
+
+  @if (error(); as err) {
+    <div class="card pane">
+      <p class="error-text">{{ err }}</p>
+      <button type="button" class="btn btn-ghost btn-sm" (click)="load()">
+        <th-icon name="refresh" />
+        Try again
+      </button>
+    </div>
+  }
+
+  @if (data(); as d) {
+    <!-- Straight to the three things you actually came here to do -->
+    <nav class="quick" aria-label="Common tasks">
+      <a class="qa qa-vacant" routerLink="/flats">
+        <span class="qa-ico"><th-icon name="bed" /></span>
+        <span class="qa-text">
+          <strong>Fill a bed</strong>
+          <small>{{ d.vacantSeats }} vacant</small>
+        </span>
+        <th-icon class="qa-go" name="arrow-right" />
+      </a>
+      <a class="qa qa-green" routerLink="/flats">
+        <span class="qa-ico"><th-icon name="rupee" /></span>
+        <span class="qa-text">
+          <strong>Send a receipt</strong>
+          <small>{{ d.pendingTenants.length }} still to pay</small>
+        </span>
+        <th-icon class="qa-go" name="arrow-right" />
+      </a>
+      <a class="qa qa-red" routerLink="/expenses">
+        <span class="qa-ico"><th-icon name="minus" /></span>
+        <span class="qa-text">
+          <strong>Log an expense</strong>
+          <small>Rs. {{ d.expenseThisMonth | number: '1.0-0' }} {{ periodLabel() }}</small>
+        </span>
+        <th-icon class="qa-go" name="arrow-right" />
+      </a>
+      <a class="qa qa-navy" routerLink="/receipts">
+        <span class="qa-ico"><th-icon name="receipt" /></span>
+        <span class="qa-text">
+          <strong>See receipts</strong>
+          <small>{{ d.receiptsThisMonth }} sent</small>
+        </span>
+        <th-icon class="qa-go" name="arrow-right" />
+      </a>
+    </nav>
+
+    @if (!isCurrent()) {
+      <div class="looking-back" role="status">
+        <span class="lb-dot"></span>
+        Showing <strong>{{ d.monthLabel }}</strong>, not the current month. Occupancy and the
+        all-time totals below are always as of today.
+      </div>
+    }
+
+    <!-- This month -->
+    <section class="grid">
+      <div class="card kpi tone-green">
+        <span class="kpi-label">Collected {{ periodLabel() }}</span>
+        <span class="kpi-value good">Rs. {{ d.collectedThisMonth | number: '1.0-0' }}</span>
+        <span class="kpi-foot">
+          of Rs. {{ d.expectedThisMonth | number: '1.0-0' }} expected
+          @if (collectedTrend(); as t) {
+            <span class="trend" [class.good]="t.good" [class.bad]="!t.good">
+              {{ t.up ? '▲' : '▼' }} {{ t.pct }}%
+            </span>
+          }
+        </span>
+      </div>
+
+      <div class="card kpi" [class.tone-red]="d.pendingThisMonth > 0"
+           [class.tone-green]="d.pendingThisMonth <= 0">
+        <span class="kpi-label">Pending {{ periodLabel() }}</span>
+        <span class="kpi-value" [class.bad]="d.pendingThisMonth > 0"
+              [class.good]="d.pendingThisMonth <= 0">
+          Rs. {{ d.pendingThisMonth | number: '1.0-0' }}
+        </span>
+        <span class="kpi-foot">
+          {{ d.pendingTenants.length }}
+          {{ d.pendingTenants.length === 1 ? 'tenant' : 'tenants' }} yet to pay
+        </span>
+      </div>
+
+      <div class="card kpi tone-red">
+        <span class="kpi-label">Expenses {{ periodLabel() }}</span>
+        <span class="kpi-value bad">Rs. {{ d.expenseThisMonth | number: '1.0-0' }}</span>
+        <span class="kpi-foot">
+          @if (biggestExpense(); as top) {
+            biggest: {{ top.remark }}
+          } @else {
+            nothing logged yet
+          }
+          @if (expenseTrend(); as t) {
+            <span class="trend" [class.good]="t.good" [class.bad]="!t.good">
+              {{ t.up ? '▲' : '▼' }} {{ t.pct }}%
+            </span>
+          }
+        </span>
+      </div>
+
+      <div class="card kpi hero">
+        <span class="kpi-label">Net {{ periodLabel() }}</span>
+        <span class="kpi-value" [class.neg]="d.netThisMonth < 0">
+          Rs. {{ d.netThisMonth | number: '1.0-0' }}
+        </span>
+        <span class="kpi-foot">
+          collected minus expenses
+          @if (netTrend(); as t) {
+            <span class="trend" [class.good]="t.good" [class.bad]="!t.good">
+              {{ t.up ? '▲' : '▼' }} {{ t.pct }}%
+            </span>
+          }
+        </span>
+      </div>
+    </section>
+
+    <!-- Vacancy — the money not being earned -->
+    <section class="card kpi vacancy" [class.filled]="d.vacantSeats === 0">
+      <div class="vac-left">
+        <span class="kpi-label">
+          @if (d.vacantSeats > 0) {
+            <span class="dot-vacant"></span>
+          }
+          Vacant beds right now
+        </span>
+        <span class="vac-value" [class.ink-vacant]="d.vacantSeats > 0">
+          {{ d.vacantSeats }}
+        </span>
+        <span class="kpi-foot">
+          @if (d.vacantSeats > 0) {
+            of {{ d.totalSeats }} beds · every one is rent you are not collecting
+          } @else {
+            all {{ d.totalSeats }} beds are earning
+          }
+        </span>
+      </div>
+
+      <a class="btn" [class.btn-vacant]="d.vacantSeats > 0" [class.btn-ghost]="d.vacantSeats === 0"
+         routerLink="/flats">
+        {{ d.vacantSeats > 0 ? 'Fill them' : 'See flats' }}
+        <th-icon name="arrow-right" />
+      </a>
+    </section>
+
+    <!-- Collection progress -->
+    <section class="card pane">
+      <div class="pane-head">
+        <h2>
+          <span class="pane-ico ico-green"><th-icon name="rupee" /></span>
+          Collection {{ periodLabel() }}
+        </h2>
+        <span class="rate">{{ d.collectionRatePercent }}%</span>
+      </div>
+      <div class="track" [class.owing]="d.pendingThisMonth > 0">
+        <div class="fill green" [style.width.%]="d.collectionRatePercent"></div>
+      </div>
+      <p class="muted small">
+        Rs. {{ d.collectedThisMonth | number: '1.0-0' }} collected against
+        Rs. {{ d.expectedThisMonth | number: '1.0-0' }} due. Money counts only once a receipt
+        has been sent.
+      </p>
+    </section>
+
+    <!-- Chart -->
+    <section class="card pane">
+      <div class="pane-head">
+        <h2>
+          <span class="pane-ico"><th-icon name="chart" /></span>
+          Collected vs spent
+        </h2>
+        <div class="spans" role="group" aria-label="How far back the chart goes">
+          @for (n of [3, 6, 12]; track n) {
+            <button type="button" [class.on]="span() === n" (click)="setSpan(n)">{{ n }}m</button>
+          }
+        </div>
+        <div class="legend">
+          <span><i class="sw in"></i>Collected</span>
+          <span><i class="sw out"></i>Expenses</span>
+        </div>
+      </div>
+
+      <!-- Point at a month and it reads out here, so no squinting at bars -->
+      <div class="readout" [class.live]="hovered() !== null">
+        @if (hovered(); as h) {
+          <strong>{{ h.label }}</strong>
+          <span class="ro in">In Rs. {{ h.collected | number: '1.0-0' }}</span>
+          <span class="ro out">Out Rs. {{ h.expense | number: '1.0-0' }}</span>
+          <span class="ro net" [class.neg]="h.net < 0">
+            Net Rs. {{ h.net | number: '1.0-0' }}
+          </span>
+        } @else {
+          <span class="muted small">Hover or tap a month to see its figures.</span>
+        }
+      </div>
+
+      <div class="chart-scroll">
+        <div class="chart">
+          @for (bar of bars(); track bar.point.month) {
+            <button type="button" class="col" [class.on]="hovered()?.month === bar.point.month"
+                    (mouseenter)="hovered.set(bar.point)" (mouseleave)="hovered.set(null)"
+                    (focus)="hovered.set(bar.point)" (blur)="hovered.set(null)"
+                    (click)="hovered.set(bar.point)"
+                    [attr.aria-label]="bar.point.label + ': collected ' + bar.point.collected
+                      + ', spent ' + bar.point.expense">
+              <div class="stack">
+                <div class="bar in" [style.height.%]="bar.inHeight"></div>
+                <div class="bar out" [style.height.%]="bar.outHeight"></div>
+              </div>
+              <span class="xlabel">{{ bar.point.label.split(' ')[0] }}</span>
+              <span class="xnet" [class.neg]="bar.point.net < 0">
+                {{ bar.point.net | number: '1.0-0' }}
+              </span>
+            </button>
+          }
+        </div>
+      </div>
+    </section>
+
+    <!-- Month by month -->
+    <section class="card pane">
+      <div class="pane-head">
+        <h2>
+          <span class="pane-ico"><th-icon name="calendar" /></span>
+          Month by month
+        </h2>
+        <span class="muted small">
+          {{ span() }} months ending {{ d.monthLabel }}
+        </span>
+      </div>
+
+      <!-- Scrolls in place with the header pinned: twelve months of rows no
+           longer stretch the card down the page. -->
+      <div class="table-wrap scroll">
+        <table>
+          <thead>
+            <tr>
+              <th>Month</th>
+              <th class="num">Collected</th>
+              <th class="num">Expenses</th>
+              <th class="num">Net</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (m of d.months; track m.month) {
+              <tr [class.current]="m.month === d.month">
+                <td class="strong nowrap">
+                  {{ m.label }}
+                  @if (m.month === d.month) {
+                    <span class="pill pill-now">this month</span>
+                  }
+                </td>
+                <td class="num good">Rs. {{ m.collected | number: '1.0-0' }}</td>
+                <td class="num">Rs. {{ m.expense | number: '1.0-0' }}</td>
+                <td class="num strong" [class.bad]="m.net < 0">
+                  Rs. {{ m.net | number: '1.0-0' }}
+                </td>
+              </tr>
+            }
+          </tbody>
+          <tfoot>
+            <tr>
+              <td class="strong">Total</td>
+              <td class="num strong">Rs. {{ monthTotal('collected') | number: '1.0-0' }}</td>
+              <td class="num strong">Rs. {{ monthTotal('expense') | number: '1.0-0' }}</td>
+              <td class="num strong" [class.bad]="monthTotal('net') < 0">
+                Rs. {{ monthTotal('net') | number: '1.0-0' }}
+              </td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </section>
+
+    <!-- Occupancy -->
+    <section class="card pane">
+      <div class="pane-head">
+        <h2>
+          <span class="pane-ico ico-vacant"><th-icon name="bed" /></span>
+          Occupancy
+        </h2>
+        <span class="rate">{{ d.occupancyPercent }}%</span>
+      </div>
+      <!-- Filled is green, the rest of the bar is the vacancy in orange -->
+      <div class="track" [class.open]="d.vacantSeats > 0">
+        <div class="fill green" [style.width.%]="d.occupancyPercent"></div>
+      </div>
+      <p class="muted small">
+        {{ d.filledSeats }} of {{ d.totalSeats }} beds are taken across
+        {{ d.flatCount }} {{ d.flatCount === 1 ? 'flat' : 'flats' }}, leaving
+        @if (d.vacantSeats > 0) {
+          <strong class="ink-vacant">{{ d.vacantSeats }}</strong>
+          {{ d.vacantSeats === 1 ? 'bed' : 'beds' }} to fill.
+        } @else {
+          nothing empty.
+        }
+      </p>
+    </section>
+
+    <!-- All time -->
+    <section class="grid">
+      <div class="card kpi small-kpi tone-green">
+        <span class="kpi-label">Total collected</span>
+        <span class="kpi-value good">Rs. {{ d.totalCollected | number: '1.0-0' }}</span>
+      </div>
+      <div class="card kpi small-kpi tone-red">
+        <span class="kpi-label">Total expenses</span>
+        <span class="kpi-value bad">Rs. {{ d.totalExpense | number: '1.0-0' }}</span>
+      </div>
+      <div class="card kpi small-kpi" [class.tone-red]="d.netBalance < 0"
+           [class.tone-navy]="d.netBalance >= 0">
+        <span class="kpi-label">Net balance</span>
+        <span class="kpi-value" [class.bad]="d.netBalance < 0">
+          Rs. {{ d.netBalance | number: '1.0-0' }}
+        </span>
+      </div>
+    </section>
+
+    <div class="two-col">
+      <!-- Pending -->
+      <section class="card pane">
+        <div class="pane-head">
+          <h2>
+            <span class="pane-ico ico-red"><th-icon name="clock" /></span>
+            Yet to pay
+          </h2>
+          <span class="head-links">
+            <button type="button" class="link"
+                    [disabled]="d.pendingTenants.length === 0" (click)="exportPendingCsv()">
+              <th-icon name="download" />
+              CSV
+            </button>
+            <button type="button" class="link"
+                    [disabled]="d.pendingTenants.length === 0" (click)="openRemindAll()">
+              <th-icon name="bell" />
+              Remind all
+            </button>
+            <a class="link" routerLink="/flats">Go to flats</a>
+          </span>
+        </div>
+
+        @if (d.pendingTenants.length === 0) {
+          <div class="empty">
+            <span class="empty-ico"><th-icon name="check" /></span>
+            <p>Everyone has paid.</p>
+            <p class="empty-sub">Everyone who lived here in {{ d.monthLabel }} is settled.</p>
+          </div>
+        } @else {
+          <!-- The list scrolls; the card stays the height it was whether two
+               people owe rent or forty. -->
+          <ul class="plist scroll-y">
+            @for (t of d.pendingTenants; track t.id) {
+              <li>
+                <div class="ptop">
+                  <div>
+                    <strong>{{ t.name }}</strong>
+                    <span class="muted small">
+                      {{ t.flatNo }} / {{ t.roomName }} ·
+                      <a class="tel" [href]="'tel:' + t.phone">{{ t.phone }}</a>
+                    </span>
+                  </div>
+                  <span class="amt">Rs. {{ t.monthlyRent | number: '1.0-0' }}</span>
+                </div>
+
+                <div class="prow">
+                  @if (remindedAgo(t.lastReminderAt); as ago) {
+                    <span class="reminded">Reminded {{ ago }}</span>
+                  }
+                  <button type="button" class="link remind" (click)="openRemindOne(t)">
+                    <th-icon name="bell" />
+                    {{ t.lastReminderAt ? 'Remind again' : 'Send reminder' }}
+                  </button>
+                </div>
+                <div class="track thin owing">
+                  <div class="fill red" [style.width.%]="pendingShare(t.monthlyRent)"></div>
+                </div>
+              </li>
+            }
+          </ul>
+
+          @if (d.pendingTenants.length > 3) {
+            <p class="scroll-note">
+              <th-icon name="arrow-down" />
+              {{ d.pendingTenants.length }} tenants · scroll for the rest
+            </p>
+          }
+        }
+      </section>
+
+      <!-- Expense split -->
+      <section class="card pane">
+        <div class="pane-head">
+          <h2>
+            <span class="pane-ico ico-red"><th-icon name="wallet" /></span>
+            Recent expenses
+          </h2>
+          <a class="link" routerLink="/expenses">See expenses</a>
+        </div>
+
+        @if (d.recentExpenses.length === 0) {
+          <div class="empty">
+            <span class="empty-ico"><th-icon name="inbox" /></span>
+            <p>Nothing logged.</p>
+            <p class="empty-sub">Add electricity, salaries or repairs and they show up here.</p>
+          </div>
+        } @else {
+          <ul class="cats scroll-y">
+            @for (e of d.recentExpenses; track e.id) {
+              <li>
+                <div class="cat-top">
+                  <span>{{ e.remark }}</span>
+                  <strong>Rs. {{ e.amount | number: '1.0-0' }}</strong>
+                </div>
+                <div class="track thin">
+                  <div class="fill red" [style.width.%]="sharePercent(e.amount)"></div>
+                </div>
+              </li>
+            }
+          </ul>
+
+          @if (d.recentExpenses.length > 5) {
+            <p class="scroll-note">
+              <th-icon name="arrow-down" />
+              {{ d.recentExpenses.length }} entries · scroll for the rest
+            </p>
+          }
+        }
+      </section>
+    </div>
+  } @else if (loading()) {
+    <!-- Bars in the shape of what is coming, rather than the word "loading" -->
+    <div class="grid">
+      @for (n of [1, 2, 3, 4]; track n) {
+        <div class="card kpi">
+          <span class="skeleton sk-label"></span>
+          <span class="skeleton sk-value"></span>
+          <span class="skeleton sk-foot"></span>
+        </div>
+      }
+    </div>
+    <div class="card pane">
+      <span class="skeleton sk-line"></span>
+      <span class="skeleton sk-block"></span>
+    </div>
+  }
+</div>
+
+<!-- ─────────── Reminder sheet ─────────── -->
+@if (remindOpen()) {
+  <div class="backdrop" (click)="closeRemind()">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <div class="modal-head">
+        <div>
+          <h3>Send rent reminder</h3>
+          <p>
+            @if (remindOnly(); as one) {
+              {{ one.name }} · {{ one.flatNo }} / {{ one.roomName }}
+            } @else {
+              Everyone who still owes for {{ data()?.monthLabel }}
+            }
+          </p>
+        </div>
+        <button type="button" class="x" aria-label="Close" (click)="closeRemind()">
+          <th-icon name="close" />
+        </button>
+      </div>
+
+      <p class="notice">
+        Anyone whose receipt has already gone out is skipped automatically, so nobody
+        who has paid gets chased.
+      </p>
+
+      <div class="field">
+        <label for="rnote">Add a line <span class="opt">optional</span></label>
+        <input id="rnote" type="text" placeholder="Please clear it before the 10th"
+               [(ngModel)]="remindNote" />
+      </div>
+
+      @if (remindError(); as err) {
+        <p class="error-text" role="alert">{{ err }}</p>
+      }
+      @if (remindDone(); as done) {
+        <p class="done" role="status">{{ done }}</p>
+      }
+
+      <div class="actions">
+        @if (!remindDone()) {
+          <button type="button" class="btn btn-gold" [disabled]="reminding()"
+                  (click)="sendReminders()">
+            <th-icon name="mail" />
+            {{ reminding() ? 'Sending…' : 'Send reminder' }}
+          </button>
+        }
+        <button type="button" class="btn btn-ghost" (click)="closeRemind()">
+          {{ remindDone() ? 'Done' : 'Cancel' }}
+        </button>
+      </div>
+    </div>
+  </div>
+}

@@ -1,0 +1,156 @@
+// =============================================================
+//  Tridev Heights · Accounts · Design tokens
+//  Palette and type carried over from the main Tridev Heights site
+//  so receipts and the desk feel like one brand.
+// =============================================================
+
+// ---- Typography ----
+// Display face for numbers and headings, a neutral UI face for everything
+// else. Both are variable-weight, so a heading can be tightened without
+// swapping to a second file.
+$font-heading: 'Plus Jakarta Sans', 'Poppins', ui-sans-serif, system-ui, -apple-system, sans-serif;
+$font-body: 'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif;
+$font-mono: ui-monospace, 'SF Mono', 'JetBrains Mono', Menlo, monospace;
+
+// =============================================================
+//  Palette · "Royal Navy & Gold", cleaned up
+//
+//  The neutrals are cool slate rather than warm cream: white cards read
+//  as white against them, and every accent colour below sits on top
+//  without turning muddy.
+// =============================================================
+
+// ---- Ink and neutrals ----
+$ink: #0b1220;
+$ink-2: #101a2c;
+$ink-soft: #1a2436;
+$muted: #64748b;
+$muted-2: #94a3b8;
+$muted-light: rgba(255, 255, 255, 0.64);
+
+$bg: #f4f6fb;
+$bg-2: #eef1f8;
+$surface: #ffffff;
+$surface-2: #f8fafc;
+$surface-3: #f1f5f9;
+
+$line: rgba(11, 18, 32, 0.08);
+$line-2: rgba(11, 18, 32, 0.14);
+$line-dark: rgba(255, 255, 255, 0.12);
+
+// ---- Brand ----
+$navy: #1c3f6e;
+$navy-dark: #14304f;
+$navy-bright: #3572c4;
+$navy-tint: #eaf1fa;
+$navy-tint-2: #dbe7f6;
+
+$gold: #e6a233;
+$gold-soft: #f6c163;
+$gold-tint: #fdf3df;
+// Gold is unreadable as text; this is the ink used on any gold tint.
+$gold-ink: #7a5410;
+
+$success: #0f8a5f;
+$success-tint: #e6f6ee;
+$danger: #c62a1f;
+$danger-tint: #fdecea;
+
+// =============================================================
+//  Status colour code — one meaning per colour, on every screen
+//
+//  ORANGE  vacant / empty bed        · and it blinks, everywhere
+//  GREEN   occupied · receipt sent   · money in
+//  RED     rent due · expense · loss · money out or missing
+//  NAVY    neutral figure, structure
+//  VIOLET  hall — the shared common room
+//  GOLD    brand accent, "everything full"
+// =============================================================
+
+// ---- Vacant: the one colour that blinks ----
+$vacant: #ea580c;
+$vacant-strong: #c2410c;
+$vacant-deep: #9a3412;
+$vacant-tint: #fff4ec;
+$vacant-tint-2: #ffe3d0;
+$vacant-line: rgba(234, 88, 12, 0.42);
+$vacant-glow: rgba(234, 88, 12, 0.26);
+
+// ---- Occupied / paid ----
+$occupied: #0f8a5f;
+$occupied-tint: #e6f6ee;
+$occupied-line: rgba(15, 138, 95, 0.32);
+
+// ---- Rent due / money out ----
+$due: #c62a1f;
+$due-tint: #fdecea;
+$due-line: rgba(198, 42, 31, 0.3);
+
+// ---- Room types ----
+// Hall is deliberately a different family from every bedroom, because it is
+// a different kind of room: shared, and usually the one with beds left.
+$hall: #7c3aed;
+$hall-strong: #6127c9;
+$hall-tint: #f3ecff;
+$hall-line: rgba(124, 58, 237, 0.3);
+
+$bed-1: #2563eb;
+$bed-1-tint: #e8f0fe;
+$bed-2: #0d9488;
+$bed-2-tint: #e0f5f2;
+$bed-3: #db2777;
+$bed-3-tint: #fdeaf3;
+$bed-4: #475569;
+$bed-4-tint: #eef2f7;
+
+// ---- Gradients ----
+$grad-primary: linear-gradient(135deg, #1c3f6e 0%, #3572c4 100%);
+$grad-gold: linear-gradient(135deg, #d08e1c 0%, #eaa93c 52%, #f8cd76 100%);
+$grad-vacant: linear-gradient(135deg, #c2410c 0%, #ea580c 55%, #fb923c 100%);
+$grad-green: linear-gradient(135deg, #0a6f4c 0%, #0f8a5f 55%, #2bb583 100%);
+$grad-red: linear-gradient(135deg, #9b1c14 0%, #c62a1f 55%, #e35349 100%);
+$grad-hall: linear-gradient(135deg, #5b21b6 0%, #7c3aed 55%, #a78bfa 100%);
+$grad-dark:
+  radial-gradient(760px 440px at 88% -12%, rgba(230, 162, 51, 0.2), transparent 62%),
+  radial-gradient(600px 380px at -8% 110%, rgba(53, 114, 196, 0.28), transparent 60%),
+  #070d18;
+// A one-pixel highlight along the top of a dark surface, so it catches light.
+$sheen: linear-gradient(180deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0));
+
+// ---- Shape & elevation ----
+$radius-xs: 9px;
+$radius-sm: 13px;
+$radius: 18px;
+$radius-lg: 24px;
+$radius-pill: 999px;
+
+// Two-layer shadows: a tight contact shadow that seats the card on the
+// page, plus a wide soft one for depth. One blurry layer alone reads as
+// a smudge; this reads as a surface.
+$shadow-xs: 0 1px 2px rgba(11, 18, 32, 0.05);
+$shadow-sm: 0 1px 2px rgba(11, 18, 32, 0.04), 0 6px 18px rgba(11, 18, 32, 0.05);
+$shadow-md: 0 2px 5px rgba(11, 18, 32, 0.05), 0 14px 34px rgba(11, 18, 32, 0.09);
+$shadow-lg: 0 6px 14px rgba(11, 18, 32, 0.07), 0 32px 70px rgba(11, 18, 32, 0.18);
+
+// Focus rings — one shape, three colours, so focus always looks the same.
+$ring: 0 0 0 3px rgba(53, 114, 196, 0.2);
+$ring-gold: 0 0 0 3px rgba(230, 162, 51, 0.28);
+$ring-danger: 0 0 0 3px rgba(198, 42, 31, 0.18);
+
+// ---- Motion ----
+$ease: cubic-bezier(0.22, 1, 0.36, 1);
+$ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+$speed-fast: 0.14s;
+$speed: 0.22s;
+$speed-slow: 0.45s;
+
+// ---- Layout ----
+$container: 1180px;
+
+// ---- Scroll frames ----
+// A list inside a card scrolls at one of these heights instead of pushing
+// the card taller. Three sizes so a card of tenants and a card of totals
+// still line up on the same row.
+$scroll-sm: 250px;
+$scroll: 340px;
+$scroll-lg: 440px;

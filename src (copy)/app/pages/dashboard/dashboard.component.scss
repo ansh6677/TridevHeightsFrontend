@@ -1,0 +1,1071 @@
+@use '../../../styles/variables' as *;
+
+// ---- Density ----
+// This screen carries more sections than any other, so it runs tighter than
+// the shared page rhythm. Loose spacing here turns the whole dashboard into
+// a scroll, and the point of a dashboard is seeing it at once.
+:host .page {
+  gap: 14px;
+  padding-bottom: 32px;
+}
+
+:host .pane {
+  padding: 15px 16px;
+  gap: 12px;
+}
+
+:host .grid {
+  gap: 12px;
+}
+
+.head-tools {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 9px;
+}
+
+.spans {
+  display: inline-flex;
+  background: rgba(13, 19, 33, 0.05);
+  border-radius: 999px;
+  padding: 3px;
+
+  button {
+    font-family: $font-body;
+    font-size: 13px;
+    font-weight: 600;
+    color: $muted;
+    background: transparent;
+    border: none;
+    border-radius: 999px;
+    padding: 7px 14px;
+    cursor: pointer;
+    transition: background $speed $ease, color $speed $ease;
+
+    &:hover {
+      color: $navy;
+    }
+
+    &.on {
+      background: $surface;
+      color: $navy;
+      box-shadow: $shadow-sm;
+    }
+  }
+}
+
+.refresh {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-family: $font-body;
+  font-size: 13px;
+  font-weight: 600;
+  color: $navy;
+  background: $surface;
+  border: 1px solid $line;
+  border-radius: 999px;
+  padding: 7px 14px;
+  cursor: pointer;
+  transition: background $speed $ease, border-color $speed $ease;
+
+  &:hover:not(:disabled) {
+    background: $navy-tint;
+    border-color: rgba(30, 58, 95, 0.25);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: default;
+  }
+
+  .spin {
+    animation: turn 0.9s linear infinite;
+  }
+}
+
+@keyframes turn {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+// ---- Quick actions ----
+// The four things anyone actually opens this screen to do, each in the
+// colour of the thing it touches.
+.quick {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 12px;
+}
+
+.qa {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 15px;
+  border-radius: $radius-sm;
+  border: 1px solid $line;
+  background: $surface;
+  box-shadow: $shadow-sm;
+  text-decoration: none;
+  color: $ink;
+  transition: transform $speed $ease, box-shadow $speed $ease, border-color $speed $ease;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: $shadow-md;
+
+    .qa-go {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+}
+
+.qa-ico {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  flex: none;
+  border-radius: 12px;
+  color: #fff;
+
+  svg {
+    width: 19px;
+    height: 19px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.7;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+}
+
+.qa-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1;
+
+  strong {
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  small {
+    font-size: 12px;
+    color: $muted;
+  }
+}
+
+// Only shows itself on hover, so the row stays calm until you reach for it.
+.qa-go {
+  display: grid;
+  place-items: center;
+  flex: none;
+  color: $muted;
+  opacity: 0;
+  transform: translateX(-4px);
+  transition: opacity $speed $ease, transform $speed $ease;
+
+  svg {
+    width: 15px;
+    height: 15px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+}
+
+.qa-vacant {
+  border-color: $vacant-line;
+  background: linear-gradient(100deg, $vacant-tint 0%, $surface 55%);
+
+  .qa-ico {
+    background: $grad-vacant;
+  }
+
+  &:hover {
+    border-color: $vacant;
+  }
+}
+
+.qa-green {
+  .qa-ico {
+    background: $grad-green;
+  }
+
+  &:hover {
+    border-color: $occupied-line;
+  }
+}
+
+.qa-red {
+  .qa-ico {
+    background: $grad-red;
+  }
+
+  &:hover {
+    border-color: $due-line;
+  }
+}
+
+.qa-navy {
+  .qa-ico {
+    background: $grad-primary;
+  }
+
+  &:hover {
+    border-color: rgba(30, 58, 95, 0.3);
+  }
+}
+
+// ---- KPI cards ----
+// Each one carries a coloured spine saying what kind of number it is:
+// green money in, red money out, navy neutral.
+.kpi {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 13px 15px 13px 18px;
+  overflow: hidden;
+  transition: box-shadow $speed $ease, border-color $speed $ease;
+
+  &:hover {
+    box-shadow: $shadow-md;
+  }
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 4px;
+    background: transparent;
+  }
+
+  &.tone-green::before {
+    background: $grad-green;
+  }
+
+  &.tone-red::before {
+    background: $grad-red;
+  }
+
+  &.tone-navy::before {
+    background: $grad-primary;
+  }
+}
+
+// Label on the left, a small tinted glyph on the right — the glyph repeats
+// what the colour already says, for anyone scanning shapes rather than hues.
+.kpi-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.kpi-ico {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  flex: none;
+  border-radius: 8px;
+
+  svg {
+    width: 15px;
+    height: 15px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.7;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+}
+
+// One tint pair per meaning, reused by the KPI glyphs, pane heads and avatars.
+.ico-green {
+  color: $occupied;
+  background: $occupied-tint;
+}
+
+.ico-red {
+  color: $due;
+  background: $due-tint;
+}
+
+.ico-navy {
+  color: $navy;
+  background: $navy-tint;
+}
+
+.ico-vacant {
+  color: $vacant-strong;
+  background: $vacant-tint;
+}
+
+.ico-gold {
+  color: $gold;
+  background: rgba(232, 166, 61, 0.16);
+}
+
+.ico-muted {
+  color: $muted;
+  background: rgba(13, 19, 33, 0.05);
+}
+
+.tag {
+  flex: none;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: $muted;
+  background: rgba(13, 19, 33, 0.05);
+  border-radius: 999px;
+  padding: 2px 8px;
+}
+
+.kpi-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: $muted;
+}
+
+.kpi-value {
+  font-family: $font-heading;
+  font-size: 22px;
+  font-weight: 600;
+  color: $ink;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.2;
+
+  &.good {
+    color: $occupied;
+  }
+
+  &.bad {
+    color: $due;
+  }
+}
+
+// ---- Vacancy card ----
+// Orange and hard to miss, but still: the blinking is reserved for the
+// empty beds themselves over on the Flats screen.
+.vacancy {
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  flex-wrap: wrap;
+  border-color: $vacant-line;
+  background: linear-gradient(100deg, $vacant-tint 0%, $surface 62%);
+
+  &::before {
+    background: $grad-vacant;
+  }
+
+  .kpi-label {
+    color: $vacant-strong;
+  }
+
+  &.filled {
+    border-color: $occupied-line;
+    background: linear-gradient(100deg, $occupied-tint 0%, $surface 62%);
+
+    &::before {
+      background: $grad-green;
+    }
+
+    .kpi-label {
+      color: $occupied;
+    }
+
+    .vac-value {
+      color: $occupied;
+    }
+  }
+}
+
+.vac-left {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.vac-value {
+  font-family: $font-heading;
+  font-size: 32px;
+  font-weight: 700;
+  line-height: 1.05;
+  color: $vacant;
+  font-variant-numeric: tabular-nums;
+}
+
+.btn-vacant {
+  background: $vacant;
+  color: #fff;
+
+  &:hover {
+    background: $vacant-strong;
+  }
+}
+
+.kpi-foot {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 7px;
+  font-size: 12.5px;
+  color: $muted;
+}
+
+// Direction against last month. Green when the movement is the good kind —
+// which for expenses means going down.
+.trend {
+  font-size: 11.5px;
+  font-weight: 700;
+  border-radius: 999px;
+  padding: 1px 8px;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+
+  &.good {
+    color: $occupied;
+    background: $occupied-tint;
+  }
+
+  &.bad {
+    color: $due;
+    background: $due-tint;
+  }
+}
+
+.kpi.hero .trend.good {
+  color: #6fe0ac;
+  background: rgba(111, 224, 172, 0.14);
+}
+
+.kpi.hero .trend.bad {
+  color: #ff8b80;
+  background: rgba(255, 139, 128, 0.14);
+}
+
+.small-kpi .kpi-value {
+  font-size: 20px;
+}
+
+.kpi.hero {
+  position: relative;
+  background: $ink;
+  border-color: transparent;
+  overflow: hidden;
+  padding-left: 20px;
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 14px auto 14px 0;
+    width: 3px;
+    background: $gold;
+    border-radius: 0 2px 2px 0;
+  }
+
+  .kpi-label {
+    color: $gold;
+  }
+
+  .kpi-value {
+    color: #fff;
+
+    // A loss on the dark card needs a red that survives the background.
+    &.neg {
+      color: #ff8b80;
+    }
+  }
+
+  .kpi-foot {
+    color: rgba(255, 255, 255, 0.6);
+  }
+}
+
+// ---- Pane heads ----
+// Icon, title and a one-line subtitle, so a pane says what it holds without
+// the reader having to parse the numbers underneath it first.
+.head-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.head-ico {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  flex: none;
+  border-radius: 9px;
+
+  svg {
+    width: 16px;
+    height: 16px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.6;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+}
+
+.head-sub {
+  display: block;
+  margin-top: 1px;
+  font-size: 12px;
+  color: $muted;
+}
+
+// ---- Progress ----
+.rate {
+  font-family: $font-heading;
+  font-size: 19px;
+  font-weight: 600;
+  color: $navy;
+
+  &.rate-green {
+    color: $occupied;
+  }
+}
+
+// The two halves of the bar, named and priced.
+.splits {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+  font-size: 12.5px;
+  color: $muted;
+}
+
+.split {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+
+  i {
+    width: 8px;
+    height: 8px;
+    flex: none;
+    border-radius: 2px;
+  }
+
+  b {
+    font-weight: 600;
+    color: $ink;
+    font-variant-numeric: tabular-nums;
+  }
+
+  &.good i {
+    background: $occupied;
+  }
+
+  &.bad i {
+    background: $due;
+  }
+
+  &.vacant i {
+    background: $vacant;
+  }
+}
+
+// The empty part of a bar is never just grey — it is the shortfall, and it
+// is tinted in the colour of whatever is missing.
+.track {
+  height: 10px;
+  background: rgba(13, 19, 33, 0.07);
+  border-radius: 999px;
+  overflow: hidden;
+
+  &.thin {
+    height: 6px;
+  }
+
+  &.hair {
+    height: 3px;
+  }
+
+  &.owing {
+    background: $due-tint;
+  }
+
+  &.open {
+    background: $vacant-tint-2;
+  }
+}
+
+.fill {
+  height: 100%;
+  background: $grad-primary;
+  border-radius: 999px;
+  transition: width 0.6s $ease;
+
+  &.gold {
+    background: $grad-gold;
+  }
+
+  &.green {
+    background: $grad-green;
+  }
+
+  &.red {
+    background: $grad-red;
+  }
+}
+
+.small {
+  font-size: 12.5px;
+}
+
+// ---- Chart ----
+.legend {
+  display: flex;
+  gap: 14px;
+  font-size: 12.5px;
+  color: $muted;
+
+  span {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+}
+
+// Money in is green everywhere on this console; money out is red.
+.sw {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+
+  &.in {
+    background: $occupied;
+  }
+
+  &.out {
+    background: $due;
+  }
+}
+
+// A readout beats a tooltip: it does not need a steady hand, and it works
+// the same way on a phone as it does with a mouse.
+.readout {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+  min-height: 34px;
+  padding: 7px 13px;
+  border-radius: $radius-sm;
+  border: 1px dashed $line;
+  background: rgba(13, 19, 33, 0.02);
+  font-size: 13px;
+  transition: border-color $speed $ease, background $speed $ease;
+
+  strong {
+    font-family: $font-heading;
+    font-size: 13.5px;
+  }
+
+  &.live {
+    border-style: solid;
+    border-color: rgba(30, 58, 95, 0.2);
+    background: $navy-tint;
+  }
+}
+
+.ro {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+
+  &.in {
+    color: $occupied;
+  }
+
+  &.out {
+    color: $due;
+  }
+
+  &.net {
+    color: $navy;
+
+    &.neg {
+      color: $due;
+    }
+  }
+}
+
+// On a narrow screen twelve months will not fit; let the chart scroll
+// rather than crushing the bars into slivers.
+.chart-scroll {
+  overflow-x: auto;
+  margin: 0 -4px;
+  padding: 0 4px;
+}
+
+.chart {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(38px, 1fr);
+  gap: 10px;
+  align-items: end;
+  min-height: 168px;
+  min-width: 100%;
+}
+
+.col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+  padding: 6px 2px 4px;
+  border: none;
+  border-radius: $radius-sm;
+  background: transparent;
+  font-family: $font-body;
+  cursor: pointer;
+  transition: background $speed $ease;
+
+  &:hover,
+  &.on {
+    background: rgba(30, 58, 95, 0.06);
+  }
+
+  &:focus-visible {
+    outline: 2px solid $navy;
+    outline-offset: 1px;
+  }
+}
+
+.stack {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 4px;
+  height: 112px;
+  width: 100%;
+}
+
+.bar {
+  width: 44%;
+  max-width: 26px;
+  min-height: 3px;
+  border-radius: 4px 4px 0 0;
+  transition: height 0.55s $ease;
+
+  &.in {
+    background: $grad-green;
+  }
+
+  &.out {
+    background: $grad-red;
+  }
+}
+
+.xlabel {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: $muted;
+}
+
+.xnet {
+  font-size: 11px;
+  font-weight: 600;
+  color: $occupied;
+  font-variant-numeric: tabular-nums;
+
+  &.neg {
+    color: $due;
+  }
+}
+
+// ---- Two column bottom ----
+// Stretch, not start: side by side the two panes match height instead of one
+// dangling below the other whenever the lists are different lengths.
+.two-col {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 16px;
+  align-items: stretch;
+}
+
+.list-pane {
+  gap: 12px;
+
+  // The list is what grows; the head and total strip stay put and the rows
+  // scroll, so ten expenses take no more page than three.
+  .rows {
+    flex: 1;
+  }
+
+  // Side by side the two panes match height, so an empty one has room to
+  // spare — centre the message in it rather than leaving it top-heavy.
+  .empty {
+    flex: 1;
+    display: grid;
+    align-content: center;
+  }
+}
+
+// A one-line answer to "how much?", above the detail.
+.total-strip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: $muted;
+
+  strong {
+    font-family: $font-heading;
+    font-size: 15px;
+    letter-spacing: 0;
+    text-transform: none;
+    font-variant-numeric: tabular-nums;
+  }
+
+  &.due {
+    background: $due-tint;
+    color: rgba(179, 38, 30, 0.75);
+
+    strong {
+      color: $due;
+    }
+  }
+}
+
+.rows {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-height: 292px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 11px;
+  padding: 8px 9px;
+  border-radius: 10px;
+  transition: background $speed $ease;
+
+  &:hover {
+    background: rgba(13, 19, 33, 0.03);
+  }
+}
+
+// Initials for a person, a glyph for a thing — both in the same 32px slot so
+// the two lists line up with each other.
+.av {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  flex: none;
+  border-radius: 50%;
+  font-family: $font-heading;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+
+  svg {
+    width: 15px;
+    height: 15px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.7;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+}
+
+.av-due {
+  color: $due;
+  background: $due-tint;
+  box-shadow: inset 0 0 0 1px $due-line;
+}
+
+.av-exp {
+  color: $due;
+  background: $due-tint;
+  border-radius: 10px;
+}
+
+.row-main {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+
+  strong {
+    font-size: 13.5px;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  // The bar is a hairline under the name: relative size at a glance, without
+  // taking a row of its own.
+  .track {
+    margin-top: 5px;
+  }
+}
+
+.row-meta {
+  font-size: 11.5px;
+  color: $muted;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.row-end {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  flex: none;
+}
+
+.amt {
+  font-family: $font-heading;
+  font-weight: 600;
+  color: $due;
+  background: $due-tint;
+  border-radius: 999px;
+  padding: 2px 9px;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+
+  // On the expense list every row is money out, so the pill would just be a
+  // wall of red — the figure alone is enough there.
+  &.amt-quiet {
+    color: $ink;
+    background: transparent;
+    padding: 0;
+    font-size: 13.5px;
+  }
+}
+
+// Tapping the number on a phone should just ring them.
+.call {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: $muted;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: color $speed $ease;
+
+  svg {
+    width: 12px;
+    height: 12px;
+    flex: none;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.6;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  &:hover {
+    color: $navy;
+  }
+}
+
+// ---- Empty states ----
+.empty-ico {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  margin: 0 auto 10px;
+  border-radius: 50%;
+
+  svg {
+    width: 19px;
+    height: 19px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+}
+
+.empty {
+  padding: 26px 18px;
+
+  &.ok {
+    border-color: $occupied-line;
+    background: rgba(29, 122, 82, 0.03);
+  }
+}
+
+@media (max-width: 620px) {
+  .chart {
+    min-height: 148px;
+    grid-auto-columns: minmax(34px, 1fr);
+  }
+
+  .stack {
+    height: 96px;
+  }
+
+  .xnet {
+    display: none;
+  }
+
+  .head-tools {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .vac-value {
+    font-size: 28px;
+  }
+
+  .rows {
+    max-height: none;
+  }
+
+  .vacancy {
+    gap: 12px;
+  }
+}

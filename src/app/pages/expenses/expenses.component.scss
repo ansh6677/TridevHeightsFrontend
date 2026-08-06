@@ -1,0 +1,102 @@
+@use '../../../styles/page' as *;
+@use '../../../styles/variables' as *;
+
+// One line: amount, remark, who, date, button. Adding should take seconds.
+.quick {
+  display: grid;
+  grid-template-columns: 140px minmax(0, 1fr) 150px 160px auto;
+  gap: 12px;
+  align-items: end;
+}
+
+.filters {
+  display: grid;
+  grid-template-columns: 190px 190px auto;
+  gap: 12px;
+  align-items: end;
+}
+
+.clear {
+  align-self: end;
+}
+
+// Per-person totals for whatever the filters are showing
+.split {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px;
+}
+
+.split-chip {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  background: $navy-tint;
+  border-radius: $radius-pill;
+  padding: 7px 15px;
+  box-shadow: inset 0 0 0 1px rgba(53, 114, 196, 0.14);
+  transition: transform $speed $ease;
+
+  &:hover {
+    transform: translateY(-1px);
+  }
+}
+
+.sp-name {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: $navy;
+  opacity: 0.75;
+}
+
+.sp-amt {
+  font-family: $font-heading;
+  font-size: 14px;
+  font-weight: 600;
+  color: $navy;
+  font-variant-numeric: tabular-nums;
+}
+
+.pill-payer {
+  background: $gold-tint;
+  color: $gold-ink;
+  box-shadow: inset 0 0 0 1px rgba(230, 162, 51, 0.34);
+}
+
+table.slim {
+  min-width: 560px;
+}
+
+// Every amount on this screen is money going out, so every amount is red.
+td.out {
+  color: $due;
+}
+
+.sk-table {
+  height: 220px;
+  border-radius: $radius-sm;
+}
+
+@media (max-width: 900px) {
+  .quick {
+    grid-template-columns: 1fr 1fr;
+
+    .rem {
+      grid-column: span 2;
+    }
+
+    button {
+      grid-column: span 2;
+    }
+  }
+
+  .filters {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .clear {
+    grid-column: span 2;
+  }
+}

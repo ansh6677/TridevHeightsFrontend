@@ -1,0 +1,111 @@
+// =============================================================
+//  Tridev Heights · Accounts · Design tokens
+//  Palette and type carried over from the main Tridev Heights site
+//  so receipts and the desk feel like one brand.
+// =============================================================
+
+// ---- Typography ----
+$font-heading: 'Poppins', ui-sans-serif, system-ui, -apple-system, sans-serif;
+$font-body: 'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif;
+
+// ---- Palette · "Royal Navy & Gold" ----
+$ink: #0d1321;
+$ink-2: #101a2c;
+$ink-soft: #1a2436;
+$muted: #5b6472;
+$muted-light: rgba(255, 255, 255, 0.62);
+
+$bg: #faf8f3;
+$surface: #ffffff;
+$line: rgba(13, 19, 33, 0.09);
+$line-dark: rgba(255, 255, 255, 0.12);
+
+$navy: #1e3a5f;
+$navy-dark: #16293f;
+$navy-bright: #2f5788;
+$navy-tint: #e8edf5;
+$gold: #e8a63d;
+$gold-soft: #fcc768;
+$gold-tint: #fdf3de;
+
+$success: #1d7a52;
+$success-tint: #e3f3ea;
+$danger: #b3261e;
+$danger-tint: #fbe9e7;
+
+// =============================================================
+//  Status colour code — one meaning per colour, on every screen
+//
+//  ORANGE  vacant / empty bed        · and it blinks, everywhere
+//  GREEN   occupied · receipt sent   · money in
+//  RED     rent due · expense · loss · money out or missing
+//  NAVY    neutral figure, structure
+//  VIOLET  hall — the shared common room
+//  GOLD    brand accent, "everything full"
+// =============================================================
+
+// ---- Vacant: the one colour that blinks ----
+$vacant: #e2551c;
+$vacant-strong: #b23c0c;
+$vacant-deep: #7d2905;
+$vacant-tint: #fff1e8;
+$vacant-tint-2: #ffe2d1;
+$vacant-line: rgba(226, 85, 28, 0.45);
+$vacant-glow: rgba(226, 85, 28, 0.28);
+
+// ---- Occupied / paid ----
+$occupied: #1d7a52;
+$occupied-tint: #e3f3ea;
+$occupied-line: rgba(29, 122, 82, 0.35);
+
+// ---- Rent due / money out ----
+$due: #b3261e;
+$due-tint: #fbe9e7;
+$due-line: rgba(179, 38, 30, 0.32);
+
+// ---- Room types ----
+// Hall is deliberately a different family from every bedroom, because it is
+// a different kind of room: shared, and usually the one with beds left.
+$hall: #6d3fc4;
+$hall-strong: #55299f;
+$hall-tint: #f2ecfd;
+$hall-line: rgba(109, 63, 196, 0.32);
+
+$bed-1: #1e5fa8;
+$bed-1-tint: #e9f1fb;
+$bed-2: #0d7267;
+$bed-2-tint: #e1f3f0;
+$bed-3: #a02f7a;
+$bed-3-tint: #fbeaf5;
+$bed-4: #4a5c6f;
+$bed-4-tint: #edf1f4;
+
+// ---- Gradients ----
+$grad-primary: linear-gradient(120deg, #1e3a5f 0%, #2f5788 100%);
+$grad-gold: linear-gradient(120deg, #d18f24 0%, #f2ac43 55%, #fecb70 100%);
+$grad-vacant: linear-gradient(120deg, #b23c0c 0%, #e2551c 55%, #f5843f 100%);
+$grad-green: linear-gradient(120deg, #14603e 0%, #1d7a52 60%, #35a173 100%);
+$grad-red: linear-gradient(120deg, #8d1c16 0%, #b3261e 60%, #d4483f 100%);
+$grad-dark:
+  radial-gradient(720px 420px at 85% -10%, rgba(232, 166, 61, 0.22), transparent 62%),
+  radial-gradient(560px 360px at -5% 108%, rgba(47, 87, 136, 0.30), transparent 60%),
+  #0c111e;
+
+// ---- Shape & elevation ----
+$radius-sm: 12px;
+$radius: 20px;
+$radius-lg: 28px;
+
+// Two-layer shadows: a tight contact shadow that seats the card on the
+// page, plus a wide soft one for depth. One blurry layer alone reads as
+// a smudge; this reads as a surface.
+$shadow-sm: 0 1px 2px rgba(13, 19, 33, 0.04), 0 6px 20px rgba(13, 19, 33, 0.05);
+$shadow-md: 0 2px 4px rgba(13, 19, 33, 0.05), 0 16px 38px rgba(13, 19, 33, 0.1);
+$shadow-lg: 0 4px 8px rgba(13, 19, 33, 0.06), 0 30px 70px rgba(13, 19, 33, 0.18);
+
+// ---- Motion ----
+$ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+$speed: 0.25s;
+
+// ---- Layout ----
+$container: 1180px;

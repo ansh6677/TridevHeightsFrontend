@@ -1,0 +1,264 @@
+@use './styles/variables' as *;
+
+// Loaded once, here. It used to be pulled into each page component, which
+// meant five copies of the same tables, pills and modal rules in the bundle
+// and every component stylesheet over its size budget.
+@use './styles/page';
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  min-height: 100%;
+}
+
+// A flat cream field looks like paper; two very faint colour washes give
+// the page some depth without anyone noticing there is a gradient there.
+body {
+  font-family: $font-body;
+  font-size: 15px;
+  line-height: 1.6;
+  color: $ink;
+  background:
+    radial-gradient(900px 520px at 88% -8%, rgba(232, 166, 61, 0.09), transparent 62%),
+    radial-gradient(760px 480px at -6% 6%, rgba(30, 58, 95, 0.07), transparent 58%),
+    $bg;
+  background-attachment: fixed;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+::selection {
+  background: rgba(232, 166, 61, 0.3);
+}
+
+// A scrollbar in the brand's colours rather than the browser's default grey.
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(30, 58, 95, 0.3) transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: rgba(30, 58, 95, 0.25);
+  border: 3px solid transparent;
+  background-clip: content-box;
+  border-radius: 999px;
+
+  &:hover {
+    background: rgba(30, 58, 95, 0.42);
+    background-clip: content-box;
+  }
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-family: $font-heading;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  margin: 0;
+}
+
+// ---------------------------------------------------------------
+//  Form controls
+// ---------------------------------------------------------------
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.field label {
+  font-size: 12.5px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: $muted;
+}
+
+input,
+select,
+textarea {
+  width: 100%;
+  font-family: $font-body;
+  font-size: 15px;
+  color: $ink;
+  background: $surface;
+  border: 1px solid $line;
+  border-radius: $radius-sm;
+  padding: 11px 13px;
+  box-shadow: 0 1px 2px rgba(13, 19, 33, 0.03);
+  transition: border-color $speed $ease, box-shadow $speed $ease, background $speed $ease;
+
+  &::placeholder {
+    color: rgba(91, 100, 114, 0.55);
+  }
+
+  &:hover:not(:disabled) {
+    border-color: rgba(13, 19, 33, 0.2);
+  }
+
+  &:focus {
+    outline: none;
+    border-color: $navy;
+    box-shadow: 0 0 0 3px rgba(30, 58, 95, 0.14);
+  }
+
+  &:focus-visible {
+    outline: none;
+  }
+
+  &:disabled {
+    background: rgba(13, 19, 33, 0.03);
+    color: $muted;
+  }
+}
+
+input[type='checkbox'] {
+  width: 17px;
+  height: 17px;
+  padding: 0;
+  accent-color: $navy;
+  cursor: pointer;
+}
+
+.error-text {
+  font-size: 13px;
+  color: $danger;
+}
+
+// ---------------------------------------------------------------
+//  Buttons
+// ---------------------------------------------------------------
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-family: $font-body;
+  font-size: 14.5px;
+  font-weight: 600;
+  line-height: 1;
+  padding: 12px 20px;
+  border: 1px solid transparent;
+  border-radius: $radius-sm;
+  cursor: pointer;
+  white-space: nowrap;
+  text-decoration: none;
+  transition: background $speed $ease, border-color $speed $ease,
+    transform $speed $ease, box-shadow $speed $ease, opacity $speed $ease;
+
+  &:active:not(:disabled) {
+    transform: translateY(1px);
+  }
+
+  &:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+
+  &:focus-visible {
+    outline: 2px solid $navy;
+    outline-offset: 2px;
+  }
+}
+
+.btn-primary {
+  background: $navy;
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(30, 58, 95, 0.22);
+
+  &:hover:not(:disabled) {
+    background: $navy-dark;
+    box-shadow: 0 6px 16px rgba(30, 58, 95, 0.28);
+  }
+}
+
+.btn-gold {
+  background: $gold;
+  color: #2c1c00;
+  box-shadow: 0 2px 8px rgba(232, 166, 61, 0.3);
+
+  &:hover:not(:disabled) {
+    background: $gold-soft;
+    box-shadow: 0 6px 16px rgba(232, 166, 61, 0.38);
+  }
+}
+
+.btn-ghost {
+  background: transparent;
+  border-color: $line;
+  color: $ink;
+
+  &:hover:not(:disabled) {
+    background: rgba(13, 19, 33, 0.04);
+    border-color: rgba(13, 19, 33, 0.2);
+  }
+}
+
+.btn-danger {
+  background: transparent;
+  border-color: rgba(179, 38, 30, 0.3);
+  color: $danger;
+
+  &:hover:not(:disabled) {
+    background: $danger-tint;
+  }
+}
+
+.btn-sm {
+  padding: 8px 13px;
+  font-size: 13.5px;
+}
+
+// ---------------------------------------------------------------
+//  Card
+// ---------------------------------------------------------------
+.card {
+  background: $surface;
+  border: 1px solid $line;
+  border-radius: $radius;
+  box-shadow: $shadow-sm;
+}
+
+// ---------------------------------------------------------------
+//  Motion on arrival — a screen settles in rather than snapping in.
+//  On .page itself, not its children: the children are rebuilt every
+//  time a list reloads, and re-animating them on each keystroke of a
+//  search box is a flicker, not a flourish.
+// ---------------------------------------------------------------
+@keyframes lift-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+.page {
+  animation: lift-in 0.32s $ease both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

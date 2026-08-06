@@ -1,0 +1,545 @@
+<div class="page">
+  <div class="page-head">
+    <div>
+      <h1>Dashboard</h1>
+      <p class="page-sub">
+        @if (data(); as d) {
+          {{ d.currentMonthLabel }} · {{ d.flatCount }}
+          {{ d.flatCount === 1 ? 'flat' : 'flats' }} ·
+          {{ d.receiptsThisMonth }} {{ d.receiptsThisMonth === 1 ? 'receipt' : 'receipts' }} sent
+        } @else {
+          Loading…
+        }
+      </p>
+
+      @if (data(); as d) {
+        <div class="chips">
+          <span class="chip chip-green">
+            <b>{{ d.filledSeats }}</b> beds filled
+          </span>
+
+          @if (d.vacantSeats > 0) {
+            <span class="chip chip-vacant">
+              <b>{{ d.vacantSeats }}</b>
+              {{ d.vacantSeats === 1 ? 'bed' : 'beds' }} vacant
+            </span>
+          } @else {
+            <span class="chip chip-gold">Every bed is full</span>
+          }
+
+          @if (d.pendingTenants.length > 0) {
+            <span class="chip chip-red">
+              <b>{{ d.pendingTenants.length }}</b> yet to pay
+            </span>
+          } @else {
+            <span class="chip chip-green">Everyone has paid</span>
+          }
+        </div>
+      }
+    </div>
+
+    <div class="head-tools">
+      <div class="spans" role="group" aria-label="Months of history">
+        @for (n of [3, 6, 12]; track n) {
+          <button type="button" [class.on]="span() === n" (click)="setSpan(n)">{{ n }}m</button>
+        }
+      </div>
+
+      <button type="button" class="refresh" [disabled]="loading()" (click)="load()"
+              title="Reload the numbers">
+        <svg viewBox="0 0 20 20" width="15" height="15" aria-hidden="true"
+             [class.spin]="loading()">
+          <path d="M16 10a6 6 0 1 1-1.8-4.3M16 3v3.5h-3.5" fill="none" stroke="currentColor"
+                stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+        </svg>
+        <span>{{ loading() ? 'Refreshing…' : 'Refresh' }}</span>
+      </button>
+    </div>
+  </div>
+
+  @if (error(); as err) {
+    <div class="card pane">
+      <p class="error-text">{{ err }}</p>
+      <button type="button" class="btn btn-ghost btn-sm" (click)="load()">Try again</button>
+    </div>
+  }
+
+  @if (data(); as d) {
+    <!-- Straight to the three things you actually came here to do -->
+    <nav class="quick" aria-label="Common tasks">
+      <a class="qa qa-vacant" routerLink="/flats">
+        <span class="qa-ico">
+          <svg viewBox="0 0 20 20" aria-hidden="true">
+            <path d="M10 4.5v11M4.5 10h11" />
+          </svg>
+        </span>
+        <span class="qa-text">
+          <strong>Fill a bed</strong>
+          <small>{{ d.vacantSeats }} vacant</small>
+        </span>
+        <span class="qa-go" aria-hidden="true">
+          <svg viewBox="0 0 20 20"><path d="m7.5 4.5 5.5 5.5-5.5 5.5" /></svg>
+        </span>
+      </a>
+      <a class="qa qa-green" routerLink="/flats">
+        <span class="qa-ico">
+          <svg viewBox="0 0 20 20" aria-hidden="true">
+            <path d="M6 5h8M6 8.5h8M11.5 5a3.5 3.5 0 0 1 0 7H6l7 5" />
+          </svg>
+        </span>
+        <span class="qa-text">
+          <strong>Send a receipt</strong>
+          <small>{{ d.pendingTenants.length }} still to pay</small>
+        </span>
+        <span class="qa-go" aria-hidden="true">
+          <svg viewBox="0 0 20 20"><path d="m7.5 4.5 5.5 5.5-5.5 5.5" /></svg>
+        </span>
+      </a>
+      <a class="qa qa-red" routerLink="/expenses">
+        <span class="qa-ico">
+          <svg viewBox="0 0 20 20" aria-hidden="true">
+            <path d="M3.5 6.5 8 11l3-3 5.5 5.5M12.5 14.5h4v-4" />
+          </svg>
+        </span>
+        <span class="qa-text">
+          <strong>Log an expense</strong>
+          <small>Rs. {{ d.expenseThisMonth | number: '1.0-0' }} this month</small>
+        </span>
+        <span class="qa-go" aria-hidden="true">
+          <svg viewBox="0 0 20 20"><path d="m7.5 4.5 5.5 5.5-5.5 5.5" /></svg>
+        </span>
+      </a>
+      <a class="qa qa-navy" routerLink="/receipts">
+        <span class="qa-ico">
+          <svg viewBox="0 0 20 20" aria-hidden="true">
+            <path d="M5 3.5h10v13l-2.5-1.6-2.5 1.6-2.5-1.6L5 16.5zM8 7.5h4M8 10.5h4" />
+          </svg>
+        </span>
+        <span class="qa-text">
+          <strong>See receipts</strong>
+          <small>{{ d.receiptsThisMonth }} sent</small>
+        </span>
+        <span class="qa-go" aria-hidden="true">
+          <svg viewBox="0 0 20 20"><path d="m7.5 4.5 5.5 5.5-5.5 5.5" /></svg>
+        </span>
+      </a>
+    </nav>
+
+    <!-- This month -->
+    <section class="grid">
+      <div class="card kpi tone-green">
+        <div class="kpi-top">
+          <span class="kpi-label">Collected this month</span>
+          <span class="kpi-ico ico-green">
+            <svg viewBox="0 0 20 20" aria-hidden="true">
+              <path d="M3.5 13.5 8 9l3 3 5.5-5.5M12.5 5.5h4v4" />
+            </svg>
+          </span>
+        </div>
+        <span class="kpi-value good">Rs. {{ d.collectedThisMonth | number: '1.0-0' }}</span>
+        <span class="kpi-foot">
+          of Rs. {{ d.expectedThisMonth | number: '1.0-0' }} expected
+          @if (collectedTrend(); as t) {
+            <span class="trend" [class.good]="t.good" [class.bad]="!t.good">
+              {{ t.up ? '▲' : '▼' }} {{ t.pct }}%
+            </span>
+          }
+        </span>
+      </div>
+
+      <div class="card kpi" [class.tone-red]="d.pendingThisMonth > 0"
+           [class.tone-green]="d.pendingThisMonth <= 0">
+        <div class="kpi-top">
+          <span class="kpi-label">Pending this month</span>
+          <span class="kpi-ico" [class.ico-red]="d.pendingThisMonth > 0"
+                [class.ico-green]="d.pendingThisMonth <= 0">
+            <svg viewBox="0 0 20 20" aria-hidden="true">
+              <circle cx="10" cy="10" r="6.75" />
+              <path d="M10 5.8v4.4l2.9 1.8" />
+            </svg>
+          </span>
+        </div>
+        <span class="kpi-value" [class.bad]="d.pendingThisMonth > 0"
+              [class.good]="d.pendingThisMonth <= 0">
+          Rs. {{ d.pendingThisMonth | number: '1.0-0' }}
+        </span>
+        <span class="kpi-foot">
+          {{ d.pendingTenants.length }}
+          {{ d.pendingTenants.length === 1 ? 'tenant' : 'tenants' }} yet to pay
+        </span>
+      </div>
+
+      <div class="card kpi tone-red">
+        <div class="kpi-top">
+          <span class="kpi-label">Expenses this month</span>
+          <span class="kpi-ico ico-red">
+            <svg viewBox="0 0 20 20" aria-hidden="true">
+              <path d="M3.5 6.5 8 11l3-3 5.5 5.5M12.5 14.5h4v-4" />
+            </svg>
+          </span>
+        </div>
+        <span class="kpi-value bad">Rs. {{ d.expenseThisMonth | number: '1.0-0' }}</span>
+        <span class="kpi-foot">
+          @if (biggestExpense(); as top) {
+            biggest: {{ top.remark }}
+          } @else {
+            nothing logged yet
+          }
+          @if (expenseTrend(); as t) {
+            <span class="trend" [class.good]="t.good" [class.bad]="!t.good">
+              {{ t.up ? '▲' : '▼' }} {{ t.pct }}%
+            </span>
+          }
+        </span>
+      </div>
+
+      <div class="card kpi hero">
+        <div class="kpi-top">
+          <span class="kpi-label">Net this month</span>
+          <span class="kpi-ico ico-gold">
+            <svg viewBox="0 0 20 20" aria-hidden="true">
+              <rect x="2.75" y="5" width="14.5" height="10.5" rx="2.5" />
+              <path d="M2.75 8.5h14.5" />
+              <circle cx="13.6" cy="12.1" r="1.05" />
+            </svg>
+          </span>
+        </div>
+        <span class="kpi-value" [class.neg]="d.netThisMonth < 0">
+          Rs. {{ d.netThisMonth | number: '1.0-0' }}
+        </span>
+        <span class="kpi-foot">
+          collected minus expenses
+          @if (netTrend(); as t) {
+            <span class="trend" [class.good]="t.good" [class.bad]="!t.good">
+              {{ t.up ? '▲' : '▼' }} {{ t.pct }}%
+            </span>
+          }
+        </span>
+      </div>
+    </section>
+
+    <!-- Vacancy — the money not being earned -->
+    <section class="card kpi vacancy" [class.filled]="d.vacantSeats === 0">
+      <div class="vac-left">
+        <span class="kpi-label">
+          @if (d.vacantSeats > 0) {
+            <span class="dot-vacant"></span>
+          }
+          Vacant beds right now
+        </span>
+        <span class="vac-value" [class.ink-vacant]="d.vacantSeats > 0">
+          {{ d.vacantSeats }}
+        </span>
+        <span class="kpi-foot">
+          @if (d.vacantSeats > 0) {
+            of {{ d.totalSeats }} beds · every one is rent you are not collecting
+          } @else {
+            all {{ d.totalSeats }} beds are earning
+          }
+        </span>
+      </div>
+
+      <a class="btn" [class.btn-vacant]="d.vacantSeats > 0" [class.btn-ghost]="d.vacantSeats === 0"
+         routerLink="/flats">
+        {{ d.vacantSeats > 0 ? 'Fill them' : 'See flats' }}
+      </a>
+    </section>
+
+    <!-- The two rates, side by side: money in, and beds filled -->
+    <div class="two-col">
+      <section class="card pane">
+        <div class="pane-head">
+          <div class="head-title">
+            <span class="head-ico ico-green">
+              <svg viewBox="0 0 20 20" aria-hidden="true">
+                <path d="M3.5 13.5 8 9l3 3 5.5-5.5M12.5 5.5h4v4" />
+              </svg>
+            </span>
+            <div>
+              <h2>Collection this month</h2>
+              <span class="head-sub">{{ d.currentMonthLabel }}</span>
+            </div>
+          </div>
+          <span class="rate" [class.rate-green]="d.pendingThisMonth <= 0">
+            {{ d.collectionRatePercent }}%
+          </span>
+        </div>
+        <div class="track" [class.owing]="d.pendingThisMonth > 0">
+          <div class="fill green" [style.width.%]="d.collectionRatePercent"></div>
+        </div>
+        <div class="splits">
+          <span class="split good">
+            <i></i>Collected
+            <b>Rs. {{ d.collectedThisMonth | number: '1.0-0' }}</b>
+          </span>
+          <span class="split bad">
+            <i></i>Pending
+            <b>Rs. {{ d.pendingThisMonth | number: '1.0-0' }}</b>
+          </span>
+        </div>
+        <p class="muted small">
+          Against Rs. {{ d.expectedThisMonth | number: '1.0-0' }} due. Money counts only once a
+          receipt has been sent.
+        </p>
+      </section>
+
+      <section class="card pane">
+        <div class="pane-head">
+          <div class="head-title">
+            <span class="head-ico" [class.ico-vacant]="d.vacantSeats > 0"
+                  [class.ico-green]="d.vacantSeats === 0">
+              <svg viewBox="0 0 20 20" aria-hidden="true">
+                <path d="M2.5 14.5v-3a2 2 0 0 1 2-2h11a2 2 0 0 1 2 2v3M4.5 9.5V6a1.5 1.5 0 0
+                         1 1.5-1.5h8A1.5 1.5 0 0 1 15.5 6v3.5M2.5 14.5h15" />
+              </svg>
+            </span>
+            <div>
+              <h2>Occupancy</h2>
+              <span class="head-sub">{{ d.flatCount }}
+                {{ d.flatCount === 1 ? 'flat' : 'flats' }}</span>
+            </div>
+          </div>
+          <span class="rate" [class.rate-green]="d.vacantSeats === 0">
+            {{ d.occupancyPercent }}%
+          </span>
+        </div>
+        <!-- Filled is green, the rest of the bar is the vacancy in orange -->
+        <div class="track" [class.open]="d.vacantSeats > 0">
+          <div class="fill green" [style.width.%]="d.occupancyPercent"></div>
+        </div>
+        <div class="splits">
+          <span class="split good">
+            <i></i>Filled
+            <b>{{ d.filledSeats }}</b>
+          </span>
+          <span class="split vacant">
+            <i></i>Vacant
+            <b>{{ d.vacantSeats }}</b>
+          </span>
+        </div>
+        <p class="muted small">
+          {{ d.filledSeats }} of {{ d.totalSeats }} beds are taken, leaving
+          @if (d.vacantSeats > 0) {
+            <strong class="ink-vacant">{{ d.vacantSeats }}</strong>
+            {{ d.vacantSeats === 1 ? 'bed' : 'beds' }} to fill.
+          } @else {
+            nothing empty.
+          }
+        </p>
+      </section>
+    </div>
+
+    <!-- Chart -->
+    <section class="card pane">
+      <div class="pane-head">
+        <div class="head-title">
+          <span class="head-ico ico-navy">
+            <svg viewBox="0 0 20 20" aria-hidden="true">
+              <path d="M3 16.5V9M7.67 16.5V4.5M12.33 16.5v-5M17 16.5v-9" />
+            </svg>
+          </span>
+          <div>
+            <h2>Collected vs spent</h2>
+            <span class="head-sub">Last {{ span() }} months</span>
+          </div>
+        </div>
+        <div class="legend">
+          <span><i class="sw in"></i>Collected</span>
+          <span><i class="sw out"></i>Expenses</span>
+        </div>
+      </div>
+
+      <!-- Point at a month and it reads out here, so no squinting at bars -->
+      <div class="readout" [class.live]="hovered() !== null">
+        @if (hovered(); as h) {
+          <strong>{{ h.label }}</strong>
+          <span class="ro in">In Rs. {{ h.collected | number: '1.0-0' }}</span>
+          <span class="ro out">Out Rs. {{ h.expense | number: '1.0-0' }}</span>
+          <span class="ro net" [class.neg]="h.net < 0">
+            Net Rs. {{ h.net | number: '1.0-0' }}
+          </span>
+        } @else {
+          <span class="muted small">Hover or tap a month to see its figures.</span>
+        }
+      </div>
+
+      <div class="chart-scroll">
+        <div class="chart">
+          @for (bar of bars(); track bar.point.month) {
+            <button type="button" class="col" [class.on]="hovered()?.month === bar.point.month"
+                    (mouseenter)="hovered.set(bar.point)" (mouseleave)="hovered.set(null)"
+                    (focus)="hovered.set(bar.point)" (blur)="hovered.set(null)"
+                    (click)="hovered.set(bar.point)"
+                    [attr.aria-label]="bar.point.label + ': collected ' + bar.point.collected
+                      + ', spent ' + bar.point.expense">
+              <div class="stack">
+                <div class="bar in" [style.height.%]="bar.inHeight"></div>
+                <div class="bar out" [style.height.%]="bar.outHeight"></div>
+              </div>
+              <span class="xlabel">{{ bar.point.label.split(' ')[0] }}</span>
+              <span class="xnet" [class.neg]="bar.point.net < 0">
+                {{ bar.point.net | number: '1.0-0' }}
+              </span>
+            </button>
+          }
+        </div>
+      </div>
+    </section>
+
+    <!-- All time -->
+    <section class="grid">
+      <div class="card kpi small-kpi tone-green">
+        <div class="kpi-top">
+          <span class="kpi-label">Total collected</span>
+          <span class="tag">all time</span>
+        </div>
+        <span class="kpi-value good">Rs. {{ d.totalCollected | number: '1.0-0' }}</span>
+      </div>
+      <div class="card kpi small-kpi tone-red">
+        <div class="kpi-top">
+          <span class="kpi-label">Total expenses</span>
+          <span class="tag">all time</span>
+        </div>
+        <span class="kpi-value bad">Rs. {{ d.totalExpense | number: '1.0-0' }}</span>
+      </div>
+      <div class="card kpi small-kpi" [class.tone-red]="d.netBalance < 0"
+           [class.tone-navy]="d.netBalance >= 0">
+        <div class="kpi-top">
+          <span class="kpi-label">Net balance</span>
+          <span class="tag">all time</span>
+        </div>
+        <span class="kpi-value" [class.bad]="d.netBalance < 0">
+          Rs. {{ d.netBalance | number: '1.0-0' }}
+        </span>
+      </div>
+    </section>
+
+    <div class="two-col">
+      <!-- Pending -->
+      <section class="card pane list-pane">
+        <div class="pane-head">
+          <div class="head-title">
+            <span class="head-ico ico-red">
+              <svg viewBox="0 0 20 20" aria-hidden="true">
+                <circle cx="10" cy="10" r="6.75" />
+                <path d="M10 5.8v4.4l2.9 1.8" />
+              </svg>
+            </span>
+            <div>
+              <h2>Yet to pay</h2>
+              <span class="head-sub">
+                {{ d.pendingTenants.length }}
+                {{ d.pendingTenants.length === 1 ? 'tenant' : 'tenants' }} ·
+                {{ d.currentMonthLabel }}
+              </span>
+            </div>
+          </div>
+          <a class="link" routerLink="/flats">Go to flats</a>
+        </div>
+
+        @if (d.pendingTenants.length === 0) {
+          <div class="empty ok">
+            <span class="empty-ico ico-green">
+              <svg viewBox="0 0 20 20" aria-hidden="true">
+                <path d="m4.5 10.5 3.5 3.5 7.5-8" />
+              </svg>
+            </span>
+            <p>Everyone has paid.</p>
+            <p class="empty-sub">All active tenants are settled for {{ d.currentMonthLabel }}.</p>
+          </div>
+        } @else {
+          <!-- The number that actually matters: what is still outstanding. -->
+          <div class="total-strip due">
+            <span>Still outstanding</span>
+            <strong>Rs. {{ pendingTotal() | number: '1.0-0' }}</strong>
+          </div>
+
+          <ul class="rows">
+            @for (t of d.pendingTenants; track t.id) {
+              <li class="row">
+                <span class="av av-due">{{ initials(t.name) }}</span>
+                <div class="row-main">
+                  <strong>{{ t.name }}</strong>
+                  <span class="row-meta">{{ t.flatNo }} · {{ t.roomName }}</span>
+                  <div class="track hair owing">
+                    <div class="fill red" [style.width.%]="pendingShare(t.monthlyRent)"></div>
+                  </div>
+                </div>
+                <div class="row-end">
+                  <span class="amt">Rs. {{ t.monthlyRent | number: '1.0-0' }}</span>
+                  <a class="call" [href]="'tel:' + t.phone" [attr.aria-label]="'Call ' + t.name">
+                    <svg viewBox="0 0 20 20" aria-hidden="true">
+                      <path d="M6.6 3.5 8.2 7 6.6 8.4a9 9 0 0 0 5 5L13 11.8l3.5 1.6v2.6a1 1 0 0 1-1.1 1
+                               C8.9 16.4 3.6 11.1 3.1 4.6a1 1 0 0 1 1-1.1z" />
+                    </svg>
+                    <span>{{ t.phone }}</span>
+                  </a>
+                </div>
+              </li>
+            }
+          </ul>
+        }
+      </section>
+
+      <!-- Expense split -->
+      <section class="card pane list-pane">
+        <div class="pane-head">
+          <div class="head-title">
+            <span class="head-ico ico-red">
+              <svg viewBox="0 0 20 20" aria-hidden="true">
+                <path d="M4.5 3.5h11v13l-2 -1.3-1.8 1.3-1.7-1.3-1.8 1.3-1.7-1.3-2 1.3z" />
+                <path d="M7.5 7.5h5M7.5 10.5h5" />
+              </svg>
+            </span>
+            <div>
+              <h2>Recent expenses</h2>
+              <span class="head-sub">Last {{ d.recentExpenses.length }} logged</span>
+            </div>
+          </div>
+          <a class="link" routerLink="/expenses">See expenses</a>
+        </div>
+
+        @if (d.recentExpenses.length === 0) {
+          <div class="empty">
+            <span class="empty-ico ico-muted">
+              <svg viewBox="0 0 20 20" aria-hidden="true">
+                <path d="M10 4.5v11M4.5 10h11" />
+              </svg>
+            </span>
+            <p>Nothing logged.</p>
+            <p class="empty-sub">Add electricity, salaries or repairs and they show up here.</p>
+          </div>
+        } @else {
+          <div class="total-strip due">
+            <span>These add up to</span>
+            <strong>Rs. {{ recentExpenseTotal() | number: '1.0-0' }}</strong>
+          </div>
+
+          <ul class="rows">
+            @for (e of d.recentExpenses; track e.id) {
+              <li class="row">
+                <span class="av av-exp">
+                  <svg viewBox="0 0 20 20" aria-hidden="true">
+                    <path d="M6 5h8M6 8.5h8M11.5 5a3.5 3.5 0 0 1 0 7H6l7 5" />
+                  </svg>
+                </span>
+                <div class="row-main">
+                  <strong>{{ e.remark }}</strong>
+                  <span class="row-meta">{{ e.expenseDate | date: 'd MMM y' }}</span>
+                  <div class="track hair">
+                    <div class="fill red" [style.width.%]="sharePercent(e.amount)"></div>
+                  </div>
+                </div>
+                <div class="row-end">
+                  <span class="amt amt-quiet">Rs. {{ e.amount | number: '1.0-0' }}</span>
+                </div>
+              </li>
+            }
+          </ul>
+        }
+      </section>
+    </div>
+  } @else if (loading()) {
+    <div class="card pane"><p class="muted">Loading dashboard…</p></div>
+  }
+</div>

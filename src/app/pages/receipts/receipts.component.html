@@ -1,0 +1,109 @@
+<div class="page">
+  @if (toast(); as t) {
+    <div class="toast" [class.bad]="t.bad" role="status">{{ t.text }}</div>
+  }
+
+  <div class="page-head">
+    <div>
+      <h1>Receipts</h1>
+      <p class="page-sub">Every rupee that has come in, and the PDF that proves it.</p>
+
+      <div class="chips">
+        <span class="chip chip-navy">
+          <b>{{ receipts().length }}</b>
+          {{ receipts().length === 1 ? 'receipt' : 'receipts' }} sent
+        </span>
+        <span class="chip chip-green">
+          Rs. <b>{{ total() | number: '1.0-0' }}</b> collected
+        </span>
+      </div>
+    </div>
+    <div class="head-tools">
+      <input class="month-pick" type="month" aria-label="Month to show" [ngModel]="month()"
+             (ngModelChange)="month.set($event); load()" />
+      <button type="button" class="btn btn-ghost btn-sm"
+              [disabled]="receipts().length === 0" (click)="exportCsv()">
+        <th-icon name="download" />
+        Download CSV
+      </button>
+    </div>
+  </div>
+
+  <section class="card pane">
+    <div class="pane-head">
+      <h2>
+        <span class="pane-ico ico-green"><th-icon name="receipt" /></span>
+        This month's receipts
+      </h2>
+      <span class="muted small">Newest first</span>
+    </div>
+
+    @if (loading()) {
+      <div class="skeleton sk-table"></div>
+    } @else if (receipts().length === 0) {
+      <div class="empty">
+        <span class="empty-ico"><th-icon name="inbox" /></span>
+        <p>No receipts this month.</p>
+        <p class="empty-sub">
+          Go to Flats and send a receipt from a tenant's row. That is what records the money.
+        </p>
+      </div>
+    } @else {
+      <!-- Scrolls in place with the header pinned, so a busy month does not
+           push the page down forever. -->
+      <div class="table-wrap stacked scroll">
+        <table>
+          <thead>
+            <tr>
+              <th>Receipt no</th>
+              <th>Tenant</th>
+              <th>Flat / room</th>
+              <th>Period</th>
+              <th class="num">Amount</th>
+              <th>Mode</th>
+              <th class="row-actions"></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (r of receipts(); track r.id) {
+              <tr>
+                <td class="mono rno" data-label="Receipt no">{{ r.receiptNo }}</td>
+                <td class="strong" data-label="Tenant">{{ r.tenantName }}</td>
+                <td data-label="Flat / room">
+                  <span class="where" [class.hall]="isHall(r.roomName)">
+                    {{ r.flatNo }}{{ r.roomName ? ' / ' + r.roomName : '' }}
+                  </span>
+                </td>
+                <td class="muted nowrap" data-label="Period">
+                  {{ r.fromDate | date: 'dd MMM' }} – {{ r.toDate | date: 'dd MMM yy' }}
+                </td>
+                <td class="num strong in" data-label="Amount">
+                  Rs. {{ r.amount | number: '1.0-0' }}
+                </td>
+                <td data-label="Mode"><span class="mode">{{ r.paymentMode }}</span></td>
+                <td class="row-actions">
+                  <button type="button" class="link" title="Download the PDF"
+                          (click)="download(r)">
+                    <th-icon name="download" />
+                    PDF
+                  </button>
+                  @if (auth.isAdmin()) {
+                    <button type="button" class="link" title="Email it again" (click)="resend(r)">
+                      <th-icon name="mail" />
+                      Resend
+                    </button>
+                    <button type="button" class="link danger" title="Delete this receipt"
+                            (click)="remove(r)">
+                      <th-icon name="trash" />
+                      Delete
+                    </button>
+                  }
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </section>
+</div>

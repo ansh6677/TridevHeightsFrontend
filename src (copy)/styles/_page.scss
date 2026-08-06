@@ -1,0 +1,677 @@
+// Shared page chrome — imported by every page component so the console
+// looks like one product rather than four screens.
+@use 'variables' as *;
+
+// Wide enough to use the room a narrowed sidebar gives back, still narrow
+// enough that a line of text does not run away from the eye.
+.page {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 26px clamp(14px, 2.4vw, 30px) 56px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.page-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 14px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid $line;
+
+  h1 {
+    font-size: 26px;
+    letter-spacing: -0.02em;
+  }
+
+  .page-sub {
+    margin: 5px 0 0;
+    font-size: 13.5px;
+    color: $muted;
+  }
+}
+
+// ---- Head chips: the headline numbers, colour coded ----
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-top: 9px;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+  font-weight: 600;
+  padding: 5px 11px;
+  border-radius: 999px;
+  background: rgba(13, 19, 33, 0.05);
+  color: $muted;
+  font-variant-numeric: tabular-nums;
+
+  b {
+    font-weight: 700;
+  }
+
+  &.chip-navy {
+    background: $navy-tint;
+    color: $navy;
+  }
+
+  &.chip-green {
+    background: $occupied-tint;
+    color: $occupied;
+  }
+
+  &.chip-red {
+    background: $due-tint;
+    color: $due;
+  }
+
+  &.chip-gold {
+    background: $gold-tint;
+    color: #8a6410;
+  }
+
+  &.chip-hall {
+    background: $hall-tint;
+    color: $hall-strong;
+  }
+
+  // Orange, but still. The blink is kept for the flat cards alone, where
+  // it points at the actual empty bed; everywhere else the colour is enough.
+  &.chip-vacant {
+    background: $vacant-tint;
+    color: $vacant-strong;
+    box-shadow: inset 0 0 0 1px $vacant-line;
+  }
+}
+
+.card {
+  background: $surface;
+  border: 1px solid $line;
+  border-radius: $radius;
+  box-shadow: $shadow-sm;
+}
+
+.pane {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.pane-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+
+  h2 {
+    font-size: 16.5px;
+    letter-spacing: -0.01em;
+  }
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 14px;
+}
+
+.span-2 {
+  grid-column: span 2;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px;
+}
+
+.opt {
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: 0;
+  opacity: 0.7;
+}
+
+.toast {
+  position: sticky;
+  top: 14px;
+  z-index: 30;
+  align-self: center;
+  background: $ink;
+  color: #fff;
+  font-size: 14px;
+  padding: 11px 20px;
+  border-radius: 999px;
+  box-shadow: $shadow-md;
+  border-left: 3px solid $gold;
+  animation: drop 0.3s $ease both;
+}
+
+.toast.bad {
+  border-left-color: #ff6b5e;
+}
+
+@keyframes drop {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+}
+
+// ---- Tables ----
+.table-wrap {
+  overflow-x: auto;
+  border: 1px solid $line;
+  border-radius: $radius-sm;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+  min-width: 640px;
+}
+
+thead th {
+  background: $bg;
+  text-align: left;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: $muted;
+  padding: 11px 12px;
+  border-bottom: 1px solid $line;
+  white-space: nowrap;
+}
+
+tbody td {
+  padding: 12px;
+  border-bottom: 1px solid rgba(13, 19, 33, 0.05);
+  vertical-align: middle;
+}
+
+tbody tr:last-child td {
+  border-bottom: none;
+}
+
+tbody tr {
+  transition: background $speed $ease;
+}
+
+tbody tr:hover {
+  background: rgba(30, 58, 95, 0.03);
+}
+
+.num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.strong {
+  font-weight: 600;
+}
+
+.muted {
+  color: $muted;
+}
+
+.mono {
+  font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+  font-size: 12.5px;
+}
+
+.nowrap {
+  white-space: nowrap;
+}
+
+.row-actions {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.link {
+  background: none;
+  border: none;
+  font-family: $font-body;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: $navy;
+  cursor: pointer;
+  padding: 5px 8px;
+  border-radius: 7px;
+  transition: background $speed $ease;
+
+  &:hover {
+    background: rgba(30, 58, 95, 0.09);
+  }
+
+  &.danger {
+    color: $danger;
+
+    &:hover {
+      background: $danger-tint;
+    }
+  }
+}
+
+// ---- Pills ----
+.pill {
+  display: inline-block;
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  padding: 3px 9px;
+  border-radius: 999px;
+}
+
+.pill-active {
+  background: $occupied-tint;
+  color: $occupied;
+  box-shadow: inset 0 0 0 1px $occupied-line;
+}
+
+.pill-vacated {
+  background: rgba(13, 19, 33, 0.06);
+  color: $muted;
+}
+
+// ---------------------------------------------------------------
+//  Status pills — the same five colours mean the same five things
+//  on every screen of the console.
+// ---------------------------------------------------------------
+.pill-paid {
+  background: $occupied-tint;
+  color: $occupied;
+  box-shadow: inset 0 0 0 1px $occupied-line;
+}
+
+.pill-due {
+  background: $due-tint;
+  color: $due;
+  box-shadow: inset 0 0 0 1px $due-line;
+}
+
+.pill-full {
+  background: $gold-tint;
+  color: #8a6410;
+  box-shadow: inset 0 0 0 1px rgba(232, 166, 61, 0.4);
+}
+
+.pill-hall {
+  background: $hall-tint;
+  color: $hall-strong;
+  box-shadow: inset 0 0 0 1px $hall-line;
+}
+
+.pill-vacant {
+  background: $vacant-tint;
+  color: $vacant-strong;
+  box-shadow: inset 0 0 0 1px $vacant-line;
+}
+
+// ---------------------------------------------------------------
+//  Vacancy marks
+//
+//  The blink lives on the flat cards only — beside the empty bed it is
+//  actually talking about. Elsewhere a vacancy is simply orange. One
+//  blinking thing on a screen is a signal; ten is wallpaper.
+// ---------------------------------------------------------------
+@keyframes vacancy-dot {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(226, 85, 28, 0);
+  }
+  50% {
+    box-shadow: 0 0 0 5px $vacant-glow;
+  }
+}
+
+@keyframes vacancy-edge {
+  0%,
+  100% {
+    border-color: $vacant-line;
+    background: $vacant-tint;
+  }
+  50% {
+    border-color: $vacant;
+    background: $vacant-tint-2;
+  }
+}
+
+/** Static orange dot — headers, legends, anywhere off the flat cards. */
+.dot-vacant {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: $vacant;
+  flex: none;
+}
+
+/** Static orange number or word. */
+.ink-vacant {
+  color: $vacant;
+  font-weight: 600;
+}
+
+/** The same dot, pulsing. Flat cards only. */
+.blink-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: $vacant;
+  flex: none;
+  animation: vacancy-dot 1.8s $ease infinite;
+}
+
+// ---------------------------------------------------------------
+//  Colour key — printed on the screens that use the code
+// ---------------------------------------------------------------
+.key {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 7px 16px;
+  font-size: 12px;
+  color: $muted;
+
+  span {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+  }
+
+  i {
+    width: 10px;
+    height: 10px;
+    border-radius: 3px;
+    flex: none;
+  }
+
+  .k-vacant {
+    background: $vacant;
+  }
+
+  .k-paid {
+    background: $occupied;
+  }
+
+  .k-due {
+    background: $due;
+  }
+
+  .k-hall {
+    background: $hall;
+  }
+
+  .k-bed {
+    background: $bed-1;
+  }
+
+  .k-full {
+    background: $gold;
+  }
+}
+
+// ---- Empty ----
+.empty {
+  text-align: center;
+  padding: 40px 22px;
+  border: 1px dashed $line;
+  border-radius: $radius-sm;
+
+  p {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 600;
+    color: $ink;
+  }
+
+  .empty-sub {
+    margin-top: 6px;
+    max-width: 42ch;
+    margin-inline: auto;
+    font-size: 13.5px;
+    font-weight: 400;
+    line-height: 1.55;
+    color: $muted;
+  }
+}
+
+// ---------------------------------------------------------------
+//  Tables become cards on a phone
+//
+//  A table with six columns on a 380px screen is a sideways scroll and a
+//  guessing game. Below 760px each row is restacked as its own little card
+//  with the column name printed beside every value, so nothing has to be
+//  remembered from a header that has scrolled off.
+// ---------------------------------------------------------------
+@media (max-width: 760px) {
+  .table-wrap.stacked {
+    border: none;
+    border-radius: 0;
+    overflow: visible;
+
+    table {
+      min-width: 0;
+      display: block;
+    }
+
+    thead {
+      display: none;
+    }
+
+    tbody,
+    tfoot {
+      display: block;
+    }
+
+    tbody tr,
+    tfoot tr {
+      display: block;
+      background: $surface;
+      border: 1px solid $line;
+      border-left-width: 3px;
+      border-radius: $radius-sm;
+      padding: 10px 13px;
+      margin-bottom: 10px;
+    }
+
+    tbody td,
+    tfoot td {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 14px;
+      padding: 4px 0;
+      border: none;
+      text-align: left;
+
+      &::before {
+        content: attr(data-label);
+        flex: none;
+        font-size: 10.5px;
+        font-weight: 600;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        color: $muted;
+      }
+
+      &:empty {
+        display: none;
+      }
+    }
+
+    .num {
+      text-align: right;
+    }
+
+    .row-actions {
+      justify-content: flex-end;
+      gap: 2px;
+      padding-top: 8px;
+      margin-top: 4px;
+      border-top: 1px solid $line;
+
+      &::before {
+        margin-right: auto;
+      }
+    }
+  }
+}
+
+@media (max-width: 700px) {
+  .page {
+    padding: 18px 14px 44px;
+  }
+
+  .pane {
+    padding: 16px;
+  }
+
+  .span-2 {
+    grid-column: span 1;
+  }
+
+  .page-head {
+    align-items: stretch;
+
+    > .btn {
+      width: 100%;
+    }
+  }
+
+  .key {
+    font-size: 11.5px;
+    gap: 6px 12px;
+  }
+}
+
+// ---- Modals on a phone: a sheet off the bottom, easier to reach ----
+@media (max-width: 560px) {
+  .backdrop {
+    padding: 0;
+    place-items: end stretch;
+  }
+
+  .modal {
+    max-width: none;
+    border-radius: $radius-lg $radius-lg 0 0;
+    padding: 22px 18px calc(22px + env(safe-area-inset-bottom));
+    max-height: 92dvh;
+    overflow-y: auto;
+    animation: sheet 0.26s $ease both;
+  }
+
+  .actions .btn {
+    flex: 1 1 140px;
+  }
+}
+
+@keyframes sheet {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+}
+
+// ---------------------------------------------------------------
+//  Modal
+// ---------------------------------------------------------------
+.backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  background: rgba(12, 17, 30, 0.55);
+  backdrop-filter: blur(3px);
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  overflow-y: auto;
+  animation: fade 0.2s $ease both;
+}
+
+.modal {
+  position: relative;
+  width: 100%;
+  max-width: 480px;
+  background: $surface;
+  border-radius: $radius-lg;
+  box-shadow: $shadow-lg;
+  padding: 26px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  overflow: hidden;
+  animation: pop 0.26s $ease both;
+}
+
+.modal::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto;
+  height: 4px;
+  background: $grad-gold;
+}
+
+.modal-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+
+  h3 {
+    font-family: $font-heading;
+    font-size: 18px;
+    font-weight: 600;
+    margin: 0;
+  }
+
+  p {
+    margin: 4px 0 0;
+    font-size: 13px;
+    color: $muted;
+  }
+}
+
+.x {
+  background: none;
+  border: none;
+  font-size: 20px;
+  line-height: 1;
+  color: $muted;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 8px;
+
+  &:hover {
+    background: rgba(13, 19, 33, 0.06);
+    color: $ink;
+  }
+}
+
+@keyframes fade {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes pop {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.98);
+  }
+}

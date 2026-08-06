@@ -1,0 +1,852 @@
+@use '../../../styles/variables' as *;
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px 20px;
+}
+
+// The magnifier sits inside the field rather than beside it, so the search
+// reads as one control.
+.search-box {
+  position: relative;
+  display: flex;
+  align-items: center;
+  max-width: 460px;
+  flex: 1 1 260px;
+}
+
+.search-ico {
+  position: absolute;
+  left: 13px;
+  color: $muted-2;
+  pointer-events: none;
+
+  .ic {
+    width: 17px;
+    height: 17px;
+  }
+}
+
+.search {
+  width: 100%;
+  padding-left: 40px;
+  border-radius: $radius-pill;
+}
+
+.tiny {
+  font-size: 11.5px;
+}
+
+// grid-auto-rows: 1fr is what makes every card on a row the same height.
+// Paired with the scroll frame inside the card, a flat with twelve tenants
+// and a flat with two sit on the same line and stay there when one of them
+// gains a tenant.
+.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+  grid-auto-rows: 1fr;
+  gap: 18px;
+  align-items: stretch;
+}
+
+// A flat with a spare bed carries an orange edge; a full one, a green edge.
+// The edge is the first thing you see from across the room.
+.flat {
+  position: relative;
+  height: 100%;
+  padding: 20px 20px 20px 23px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  overflow: hidden;
+  transition: box-shadow $speed $ease, transform $speed $ease;
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 5px;
+    background: $occupied;
+  }
+
+  &.has-vacancy::before {
+    background: $grad-vacant;
+  }
+
+  &:hover {
+    box-shadow: $shadow-md;
+    transform: translateY(-2px);
+  }
+}
+
+// ---------------------------------------------------------------
+//  Header with occupancy
+// ---------------------------------------------------------------
+.flat-head {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 14px;
+}
+
+.flat-id {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+
+  h2 {
+    font-family: $font-heading;
+    font-size: 26px;
+    font-weight: 600;
+    color: $navy;
+    line-height: 1.05;
+    margin: 0;
+  }
+}
+
+.occupancy {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.occ-count {
+  font-family: $font-heading;
+  font-size: 13px;
+  color: $muted;
+  font-variant-numeric: tabular-nums;
+
+  strong {
+    font-size: 17px;
+    color: $ink;
+  }
+}
+
+.occ-word {
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: $muted;
+}
+
+// The unfilled part of the bar is the vacancy, so it is drawn in the
+// vacancy colour rather than left grey.
+.track {
+  height: 6px;
+  background: rgba(11, 18, 32, 0.08);
+  border-radius: 999px;
+  overflow: hidden;
+  margin-top: 3px;
+
+  &.open {
+    background: $vacant-tint-2;
+  }
+}
+
+.fill {
+  height: 100%;
+  background: $grad-green;
+  border-radius: 999px;
+  transition: width 0.5s $ease;
+
+  &.full {
+    background: $grad-gold;
+  }
+}
+
+.head-actions {
+  display: flex;
+  gap: 2px;
+}
+
+// ---------------------------------------------------------------
+//  The scrolling body
+//
+//  Everything above it — the flat number, the occupancy bar, the money
+//  strip — is pinned. Only the rooms move, which is the part that grows
+//  as beds fill up.
+// ---------------------------------------------------------------
+.flat-body {
+  --h: 430px;
+
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+// ---------------------------------------------------------------
+//  Vacancy line
+// ---------------------------------------------------------------
+.vacancy-note {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: -4px 0 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: $vacant;
+
+  .split {
+    font-weight: 500;
+    font-size: 12px;
+    color: $muted;
+  }
+
+  &.full {
+    color: $muted;
+
+    .dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: $gold;
+    }
+  }
+}
+
+// ---------------------------------------------------------------
+//  Money strip
+// ---------------------------------------------------------------
+.money {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1px;
+  background: $line;
+  border: 1px solid $line;
+  border-radius: $radius-sm;
+  overflow: hidden;
+
+  div {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    min-width: 0;
+    padding: 10px 13px;
+    background: $navy-tint;
+  }
+
+  // Due is neutral, money in is green, money still owed is red — the same
+  // three colours the dashboard uses for the same three numbers.
+  .m-green {
+    background: $occupied-tint;
+
+    .m-label {
+      color: $occupied;
+    }
+  }
+
+  .m-red {
+    background: $due-tint;
+
+    .m-label {
+      color: $due;
+    }
+  }
+}
+
+.m-label {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: $navy;
+  opacity: 0.68;
+}
+
+.m-value {
+  font-family: $font-heading;
+  font-size: 14.5px;
+  font-weight: 600;
+  color: $navy;
+  font-variant-numeric: tabular-nums;
+
+  &.good {
+    color: $occupied;
+  }
+
+  &.bad {
+    color: $due;
+  }
+}
+
+// ---------------------------------------------------------------
+//  Room bands — the hall is kept apart from the bedrooms, because it
+//  is a different kind of room and it is the one people ask about.
+// ---------------------------------------------------------------
+.group {
+  display: flex;
+  flex-direction: column;
+  gap: 11px;
+  border: 1px solid $line;
+  border-radius: $radius-sm;
+  padding: 12px;
+  background: rgba(11, 18, 32, 0.015);
+}
+
+.group-hall {
+  border-color: $hall-line;
+  background: linear-gradient(180deg, $hall-tint 0%, rgba(242, 236, 253, 0.25) 100%);
+}
+
+// Grid, not wrap: the tag and the count belong on the same line whatever
+// the card width, with the description dropping underneath them.
+.group-head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 3px 10px;
+}
+
+.group-tag {
+  grid-area: 1 / 1;
+  justify-self: start;
+  font-family: $font-heading;
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: $navy;
+  background: $navy-tint;
+  border-radius: 999px;
+  padding: 3px 11px;
+
+  .group-hall & {
+    color: #fff;
+    background: $hall;
+  }
+}
+
+.group-hint {
+  grid-column: 1 / -1;
+  grid-row: 2;
+  font-size: 11.5px;
+  color: $muted;
+}
+
+.group-stat {
+  grid-area: 1 / 2;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.group-seats {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: $muted;
+  font-variant-numeric: tabular-nums;
+}
+
+// ---------------------------------------------------------------
+//  Rooms and seat slots
+// ---------------------------------------------------------------
+.room {
+  // Every room carries its own colour. Hall violet, bedrooms cycle
+  // through four tones so two rooms side by side never read as one.
+  --tone: #{$bed-4};
+  --tone-tint: #{$bed-4-tint};
+
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  &.tone-hall {
+    --tone: #{$hall};
+    --tone-tint: #{$hall-tint};
+  }
+
+  &.tone-1 {
+    --tone: #{$bed-1};
+    --tone-tint: #{$bed-1-tint};
+  }
+
+  &.tone-2 {
+    --tone: #{$bed-2};
+    --tone-tint: #{$bed-2-tint};
+  }
+
+  &.tone-3 {
+    --tone: #{$bed-3};
+    --tone-tint: #{$bed-3-tint};
+  }
+
+  &.tone-4 {
+    --tone: #{$bed-4};
+    --tone-tint: #{$bed-4-tint};
+  }
+}
+
+.room-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding-bottom: 5px;
+  border-bottom: 1px solid var(--tone-tint);
+}
+
+.room-name {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--tone);
+}
+
+.room-swatch {
+  width: 9px;
+  height: 9px;
+  border-radius: 3px;
+  background: var(--tone);
+  flex: none;
+}
+
+.room-tail {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.room-vacant {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.room-count {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--tone);
+  font-variant-numeric: tabular-nums;
+  background: var(--tone-tint);
+  border-radius: 999px;
+  padding: 2px 9px;
+
+  &.full {
+    background: $occupied-tint;
+    color: $occupied;
+  }
+}
+
+.slots {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(168px, 1fr));
+  gap: 8px;
+}
+
+.slot {
+  position: relative;
+  border-radius: $radius-sm;
+  padding: 11px 12px 11px 14px;
+  min-height: 92px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  text-align: left;
+  overflow: hidden;
+}
+
+// A filled bed is white with a coloured spine: green once the receipt
+// has gone out, red while the rent is still owed.
+.slot.taken {
+  background: $surface;
+  border: 1px solid $line;
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 4px;
+  }
+
+  &.paid {
+    border-color: $occupied-line;
+
+    &::before {
+      background: $occupied;
+    }
+  }
+
+  &.unpaid {
+    border-color: $due-line;
+    background: linear-gradient(100deg, $due-tint 0%, $surface 55%);
+
+    &::before {
+      background: $due;
+    }
+  }
+}
+
+.slot-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+// Two lines rather than an ellipsis: the rent is on the card beside it and
+// the room above it, but a half-printed name is the one thing here you
+// cannot work out from context.
+.who {
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.3;
+  min-width: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+}
+
+.rent {
+  font-family: $font-heading;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: $navy;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.mail {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.slot-foot {
+  margin-top: auto;
+  padding-top: 7px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+// Edit and vacate are icon-only inside a bed: the words were eating the
+// width the tenant's name needed.
+.slot-links {
+  display: flex;
+  gap: 0;
+  margin-left: auto;
+
+  .link {
+    padding: 5px 6px;
+    color: $muted;
+
+    .ic {
+      width: 15px;
+      height: 15px;
+    }
+
+    &:hover {
+      color: $navy;
+    }
+  }
+}
+
+// On a narrow card the head actions drop their words and keep their icons.
+.head-actions .link {
+  gap: 5px;
+
+  .ic {
+    width: 15px;
+    height: 15px;
+  }
+}
+
+@media (max-width: 460px) {
+  .head-actions .link .lbl {
+    display: none;
+  }
+}
+
+// Empty bed — orange, dashed, softly pulsing, and the whole thing is the
+// button. This is the only thing in the whole console that moves, so the
+// movement can only ever mean one thing: that bed is empty.
+.slot.vacant {
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  // Shorter than a filled bed: when it shares a row the grid stretches it
+  // to match anyway, and a column of empty beds should not tower.
+  min-height: 74px;
+  padding-left: 12px;
+  background: $vacant-tint;
+  border: 1.5px dashed $vacant-line;
+  color: $vacant-strong;
+  font-family: $font-body;
+  cursor: pointer;
+  animation: vacancy-edge 1.8s $ease infinite;
+  transition: transform $speed $ease;
+
+  // Stop the blink while the pointer is on it — you have already noticed.
+  &:hover:not(.readonly) {
+    animation: none;
+    border-style: solid;
+    border-color: $vacant;
+    background: $vacant;
+    color: #fff;
+    transform: translateY(-1px);
+
+    .plus {
+      background: #fff;
+      color: $vacant-strong;
+    }
+
+    .vacant-hint {
+      opacity: 1;
+    }
+  }
+
+  &:focus-visible {
+    outline: 2px solid $vacant-strong;
+    outline-offset: 2px;
+  }
+
+  &.readonly {
+    cursor: default;
+  }
+}
+
+.plus {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: rgba(234, 88, 12, 0.16);
+  color: $vacant-strong;
+  margin-bottom: 3px;
+  transition: background $speed $ease, color $speed $ease;
+
+  .ic {
+    width: 15px;
+    height: 15px;
+  }
+}
+
+.vacant-label {
+  font-size: 12.5px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.vacant-hint {
+  font-size: 11px;
+  opacity: 0.8;
+}
+
+.pill-view {
+  background: $navy-tint;
+  color: $navy;
+  align-self: center;
+  padding: 7px 14px;
+  font-size: 12.5px;
+}
+
+// ---------------------------------------------------------------
+//  Modal extras
+// ---------------------------------------------------------------
+.modal.wide {
+  max-width: 540px;
+}
+
+.grid2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.span2 {
+  grid-column: span 2;
+}
+
+.notice {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.55;
+  color: #7a5410;
+  background: $gold-tint;
+  border: 1px solid rgba(230, 162, 51, 0.35);
+  border-radius: $radius-sm;
+  padding: 11px 14px;
+}
+
+.rooms-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  background: rgba(11, 18, 32, 0.03);
+  border-radius: $radius-sm;
+  padding: 14px;
+}
+
+.rooms-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: $muted;
+}
+
+.seat-total {
+  letter-spacing: 0;
+  text-transform: none;
+  font-size: 13px;
+  color: $navy;
+}
+
+.room-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 112px 38px;
+  gap: 8px;
+  align-items: center;
+
+  input {
+    padding: 9px 11px;
+    font-size: 14px;
+  }
+}
+
+.cap {
+  position: relative;
+  display: flex;
+  align-items: center;
+
+  input {
+    padding-right: 46px;
+  }
+
+  span {
+    position: absolute;
+    right: 11px;
+    font-size: 12px;
+    color: $muted;
+    pointer-events: none;
+  }
+}
+
+.icon-btn {
+  display: grid;
+  place-items: center;
+  height: 38px;
+  border: 1px solid $line-2;
+  border-radius: $radius-sm;
+  background: $surface;
+  color: $muted;
+  cursor: pointer;
+  transition: background $speed $ease, color $speed $ease, border-color $speed $ease;
+
+  .ic {
+    width: 16px;
+    height: 16px;
+  }
+
+  &:hover {
+    background: $danger-tint;
+    color: $danger;
+    border-color: rgba(198, 42, 31, 0.3);
+  }
+}
+
+.dashed {
+  border-style: dashed;
+  width: 100%;
+}
+
+@media (max-width: 520px) {
+  .cards {
+    grid-template-columns: 1fr;
+  }
+
+  .flat-head {
+    grid-template-columns: auto minmax(0, 1fr);
+    row-gap: 10px;
+  }
+
+  .head-actions {
+    grid-column: 1 / -1;
+    justify-content: flex-end;
+  }
+
+  .grid2 {
+    grid-template-columns: 1fr;
+  }
+
+  .span2 {
+    grid-column: span 1;
+  }
+
+  .slots {
+    grid-template-columns: 1fr;
+  }
+
+  // Stacked one per line, an empty bed does not need to be as tall as an
+  // occupied one — a flat with six spare beds would be a very long card.
+  .slot {
+    min-height: 80px;
+  }
+
+  .slot.vacant {
+    flex-direction: row;
+    justify-content: flex-start;
+    min-height: 52px;
+    gap: 10px;
+    padding: 10px 14px;
+  }
+
+  .plus {
+    margin-bottom: 0;
+  }
+
+  .vacant-hint {
+    margin-left: auto;
+  }
+
+  .group {
+    padding: 10px;
+  }
+
+  .toolbar .key {
+    order: -1;
+  }
+}
+
+.head-tools {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  flex-wrap: wrap;
+}
+
+.remind {
+  padding-inline: 4px;
+  font-size: 12.5px;
+}
+
+.reminded {
+  font-size: 11px;
+  font-weight: 600;
+  color: #7a5410;
+  background: $gold-tint;
+  border-radius: 999px;
+  padding: 2px 8px;
+}

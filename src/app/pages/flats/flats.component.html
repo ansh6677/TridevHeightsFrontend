@@ -1,0 +1,503 @@
+<div class="page">
+  @if (toast(); as t) {
+    <div class="toast" [class.bad]="t.bad" role="status">{{ t.text }}</div>
+  }
+
+  <div class="page-head">
+    <div>
+      <h1>Flats</h1>
+      <p class="page-sub">
+        {{ totals().flats }} {{ totals().flats === 1 ? 'flat' : 'flats' }} ·
+        {{ totals().filled }} of {{ totals().seats }} beds filled
+      </p>
+
+      <div class="chips">
+        <span class="chip chip-green">
+          <b>{{ totals().filled }}</b> occupied
+        </span>
+
+        @if (totals().vacant > 0) {
+          <span class="chip chip-vacant">
+            <b>{{ totals().vacant }}</b> vacant
+          </span>
+        } @else {
+          <span class="chip chip-gold">Every bed is full</span>
+        }
+
+        @if (totals().hallVacant > 0) {
+          <span class="chip chip-hall">
+            <span class="dot-vacant"></span>
+            <b>{{ totals().hallVacant }}</b> in halls
+          </span>
+        }
+
+        @if (totals().unpaid > 0) {
+          <span class="chip chip-red">
+            <b>{{ totals().unpaid }}</b> rent due
+          </span>
+        }
+      </div>
+    </div>
+
+    <div class="head-tools">
+      <button type="button" class="btn btn-ghost btn-sm"
+              [disabled]="cards().length === 0" (click)="exportVacancyCsv()">
+        <th-icon name="download" />
+        Vacancy CSV
+      </button>
+      <button type="button" class="btn btn-ghost btn-sm"
+              [disabled]="cards().length === 0" (click)="exportBedsCsv()">
+        <th-icon name="download" />
+        Bed list CSV
+      </button>
+      @if (auth.isAdmin()) {
+        <button type="button" class="btn btn-primary" (click)="openAddFlat()">
+          <th-icon name="plus" />
+          Add flat
+        </button>
+      } @else {
+        <span class="pill pill-view">View only</span>
+      }
+    </div>
+  </div>
+
+  <div class="toolbar">
+    <div class="search-box">
+      <th-icon class="search-ico" name="search" />
+      <input class="search" type="search" placeholder="Search flat number, room or tenant name"
+             [ngModel]="query()" (ngModelChange)="query.set($event); load()" />
+    </div>
+
+    <div class="key">
+      <span><i class="k-vacant"></i>Vacant bed</span>
+      <span><i class="k-paid"></i>Receipt sent</span>
+      <span><i class="k-due"></i>Rent due</span>
+      <span><i class="k-hall"></i>Hall · shared</span>
+      <span><i class="k-bed"></i>Bedroom</span>
+    </div>
+  </div>
+
+  @if (loading()) {
+    <div class="card pane"><p class="muted">Loading…</p></div>
+  } @else if (cards().length === 0) {
+    <div class="card pane">
+      <div class="empty">
+        <span class="empty-ico"><th-icon name="building" /></span>
+        <p>No flats yet.</p>
+        <p class="empty-sub">
+          Add flat 101 and tell it what rooms it has — Hall sleeps 3, Bedroom 1 sleeps 2.
+          Every bed becomes a slot you can fill.
+        </p>
+      </div>
+    </div>
+  } @else {
+    <div class="cards">
+      @for (card of views(); track card.id) {
+        <article class="card flat" [class.has-vacancy]="card.vacantSeats > 0">
+          <header class="flat-head">
+            <div class="flat-id">
+              <h2>{{ card.flatNo }}</h2>
+              @if (card.floor) {
+                <span class="muted tiny">{{ card.floor }} floor</span>
+              }
+            </div>
+
+            <div class="occupancy">
+              <span class="occ-count">
+                <strong>{{ card.filledSeats }}</strong>/{{ card.totalSeats }}
+              </span>
+              <span class="occ-word">beds filled</span>
+              <div class="track" [class.open]="card.vacantSeats > 0">
+                <div class="fill" [class.full]="card.vacantSeats === 0"
+                     [style.width.%]="fillPercent(card)"></div>
+              </div>
+            </div>
+
+            @if (auth.isAdmin()) {
+              <div class="head-actions">
+                <button type="button" class="link" title="Edit this flat"
+                        (click)="openEditFlat(card)">
+                  <th-icon name="edit" />
+                  <span class="lbl">Edit</span>
+                </button>
+                <button type="button" class="link danger" title="Remove this flat"
+                        (click)="removeFlat(card)">
+                  <th-icon name="trash" />
+                  <span class="lbl">Remove</span>
+                </button>
+              </div>
+            }
+          </header>
+
+          @if (card.vacantSeats > 0) {
+            <p class="vacancy-note">
+              <span class="blink-dot"></span>
+              <span class="ink-vacant">
+                {{ card.vacantSeats }} {{ card.vacantSeats === 1 ? 'bed' : 'beds' }} vacant
+              </span>
+              @if (card.hallVacant > 0 && card.bedroomVacant > 0) {
+                <span class="split">
+                  {{ card.hallVacant }} in the hall · {{ card.bedroomVacant }} in bedrooms
+                </span>
+              } @else if (card.hallVacant > 0) {
+                <span class="split">all in the hall</span>
+              } @else {
+                <span class="split">all in bedrooms</span>
+              }
+            </p>
+          } @else {
+            <p class="vacancy-note full">
+              <span class="dot"></span>
+              Fully occupied
+            </p>
+          }
+
+          <div class="money">
+            <div class="m-neutral">
+              <span class="m-label">Due</span>
+              <span class="m-value">Rs. {{ card.monthlyRentTotal | number: '1.0-0' }}</span>
+            </div>
+            <div class="m-green">
+              <span class="m-label">Collected</span>
+              <span class="m-value good">Rs. {{ card.collectedThisMonth | number: '1.0-0' }}</span>
+            </div>
+            <div [class.m-red]="card.pendingThisMonth > 0"
+                 [class.m-green]="card.pendingThisMonth <= 0">
+              <span class="m-label">Pending</span>
+              <span class="m-value" [class.bad]="card.pendingThisMonth > 0"
+                    [class.good]="card.pendingThisMonth <= 0">
+                Rs. {{ card.pendingThisMonth | number: '1.0-0' }}
+              </span>
+            </div>
+          </div>
+
+          <!-- The rooms scroll inside the card. A flat with twelve beds and a
+               flat with two are the same size on the grid, and adding a tenant
+               no longer makes every card below it jump. -->
+          <div class="flat-body scroll-y">
+          @for (g of card.groups; track g.key) {
+            <section class="group" [class.group-hall]="g.key === 'hall'"
+                     [class.group-open]="g.vacant > 0">
+              <div class="group-head">
+                <span class="group-tag">{{ g.label }}</span>
+                <span class="group-hint">{{ g.hint }}</span>
+                <span class="group-stat">
+                  @if (g.vacant > 0) {
+                    <span class="pill pill-vacant">{{ g.vacant }} vacant</span>
+                  } @else {
+                    <span class="pill pill-full">Full</span>
+                  }
+                  <span class="group-seats">{{ g.filled }}/{{ g.seats }}</span>
+                </span>
+              </div>
+
+              @for (room of g.rooms; track room.name) {
+                <section class="room" [class]="room.tone" [class.open]="room.vacant > 0">
+                  <div class="room-head">
+                    <span class="room-name">
+                      <i class="room-swatch"></i>{{ room.name }}
+                    </span>
+                    <span class="room-tail">
+                      @if (room.vacant > 0) {
+                        <span class="room-vacant ink-vacant">{{ room.vacant }} free</span>
+                      }
+                      <span class="room-count" [class.full]="room.vacant === 0">
+                        {{ room.filled }}/{{ room.capacity }}
+                      </span>
+                    </span>
+                  </div>
+
+                  <div class="slots">
+                    @for (o of room.occupants; track o.id) {
+                      <div class="slot taken" [class.paid]="o.paidThisMonth"
+                           [class.unpaid]="!o.paidThisMonth">
+                        <div class="slot-top">
+                          <span class="who">{{ o.name }}</span>
+                          <span class="rent">Rs. {{ o.monthlyRent | number: '1.0-0' }}</span>
+                        </div>
+                        <span class="muted tiny mail">{{ o.email }}</span>
+
+                        <div class="slot-foot">
+                          @if (o.paidThisMonth) {
+                            <span class="pill pill-paid" [title]="o.receiptNoThisMonth || ''">
+                              Receipt sent
+                            </span>
+                          } @else if (auth.isAdmin()) {
+                            <button type="button" class="btn btn-gold btn-sm"
+                                    (click)="openReceipt(card, o)">
+                              <th-icon name="receipt" />
+                              Send receipt
+                            </button>
+                            <button type="button" class="link remind" [disabled]="busy()"
+                                    [title]="'Email a rent reminder to ' + o.email"
+                                    (click)="remind(o)">
+                              <th-icon name="bell" />
+                              {{ o.lastReminderAt ? 'Remind again' : 'Remind' }}
+                            </button>
+                            @if (remindedAgo(o.lastReminderAt); as ago) {
+                              <span class="reminded">{{ ago }}</span>
+                            }
+                          } @else {
+                            <span class="pill pill-due">Rent due</span>
+                          }
+
+                          @if (auth.isAdmin()) {
+                            <span class="slot-links">
+                              <button type="button" class="link" title="Edit this tenant"
+                                      (click)="openEditTenant(card, o)">
+                                <th-icon name="edit" />
+                              </button>
+                              <button type="button" class="link" title="Move this tenant out"
+                                      (click)="vacate(o)">
+                                <th-icon name="logout" />
+                              </button>
+                            </span>
+                          }
+                        </div>
+                      </div>
+                    }
+
+                    @for (i of vacantSlots(room); track i) {
+                      @if (auth.isAdmin()) {
+                        <button type="button" class="slot vacant"
+                                [attr.aria-label]="'Vacant bed in ' + room.name + ', add a tenant'"
+                                (click)="openAddTenant(card, room.name)">
+                          <span class="plus"><th-icon name="plus" /></span>
+                          <span class="vacant-label">Vacant</span>
+                          <span class="vacant-hint">Add tenant</span>
+                        </button>
+                      } @else {
+                        <div class="slot vacant readonly">
+                          <span class="vacant-label">Vacant</span>
+                          <span class="vacant-hint">{{ room.name }}</span>
+                        </div>
+                      }
+                    }
+                  </div>
+                </section>
+              }
+            </section>
+          }
+          </div>
+        </article>
+      }
+    </div>
+  }
+</div>
+
+<!-- ─────────── Flat sheet ─────────── -->
+@if (sheet() === 'flat') {
+  <div class="backdrop" (click)="close()">
+    <div class="modal wide" (click)="$event.stopPropagation()">
+      <div class="modal-head">
+        <div>
+          <h3>{{ editingFlat() ? 'Edit flat ' + activeFlat()?.flatNo : 'Add a flat' }}</h3>
+          <p>List the rooms and how many people each sleeps.</p>
+        </div>
+        <button type="button" class="x" aria-label="Close" (click)="close()">
+          <th-icon name="close" />
+        </button>
+      </div>
+
+      <div class="grid2">
+        <div class="field">
+          <label for="fno">Flat number</label>
+          <input id="fno" type="text" placeholder="101" [(ngModel)]="flatForm.flatNo" />
+        </div>
+        <div class="field">
+          <label for="ffloor">Floor <span class="opt">optional</span></label>
+          <input id="ffloor" type="text" placeholder="1st" [(ngModel)]="flatForm.floor" />
+        </div>
+      </div>
+
+      <div class="rooms-editor">
+        <div class="rooms-head">
+          <span>Rooms in this flat</span>
+          <span class="seat-total">{{ formSeats() }} beds total</span>
+        </div>
+
+        @for (room of flatForm.rooms; track $index) {
+          <div class="room-row">
+            <input type="text" list="room-names" placeholder="Hall" [(ngModel)]="room.name" />
+            <div class="cap">
+              <input type="number" min="1" max="20" [(ngModel)]="room.capacity" />
+              <span>beds</span>
+            </div>
+            <button type="button" class="icon-btn" aria-label="Remove this room"
+                    (click)="removeRoomRow($index)">
+              <th-icon name="close" />
+            </button>
+          </div>
+        }
+
+        <datalist id="room-names">
+          @for (r of roomSuggestions; track r) {
+            <option [value]="r"></option>
+          }
+        </datalist>
+
+        <button type="button" class="btn btn-ghost btn-sm dashed" (click)="addRoomRow()">
+          <th-icon name="plus" />
+          Add another room
+        </button>
+      </div>
+
+      <div class="field">
+        <label for="fnotes">Notes <span class="opt">optional</span></label>
+        <input id="fnotes" type="text" placeholder="Corner flat, 2 balconies"
+               [(ngModel)]="flatForm.notes" />
+      </div>
+
+      @if (sheetError(); as err) {
+        <p class="error-text" role="alert">{{ err }}</p>
+      }
+
+      <div class="actions">
+        <button type="button" class="btn btn-primary" [disabled]="busy()" (click)="saveFlat()">
+          {{ busy() ? 'Saving…' : editingFlat() ? 'Save changes' : 'Add flat' }}
+        </button>
+        <button type="button" class="btn btn-ghost" (click)="close()">Cancel</button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- ─────────── Tenant sheet ─────────── -->
+@if (sheet() === 'tenant') {
+  <div class="backdrop" (click)="close()">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <div class="modal-head">
+        <div>
+          <h3>{{ editingTenant() ? 'Edit tenant' : 'Fill a bed' }}</h3>
+          <p>{{ activeFlat()?.flatNo }} · {{ tenantForm.roomName }}</p>
+        </div>
+        <button type="button" class="x" aria-label="Close" (click)="close()">
+          <th-icon name="close" />
+        </button>
+      </div>
+
+      @if (!editingTenant()) {
+        <p class="notice">A welcome email goes out as soon as you save.</p>
+      }
+
+      <div class="grid2">
+        <div class="field span2">
+          <label for="tname">Full name</label>
+          <input id="tname" type="text" placeholder="Rahul Sharma" [(ngModel)]="tenantForm.name" />
+        </div>
+
+        <div class="field span2">
+          <label for="temail">Email <span class="opt">receipts go here</span></label>
+          <input id="temail" type="email" autocapitalize="none" placeholder="rahul@example.com"
+                 [(ngModel)]="tenantForm.email" />
+        </div>
+
+        <div class="field">
+          <label for="tphone">Phone</label>
+          <input id="tphone" type="tel" placeholder="99301 12233" [(ngModel)]="tenantForm.phone" />
+        </div>
+
+        <div class="field">
+          <label for="trent">Rent (Rs.)</label>
+          <input id="trent" type="number" min="0" placeholder="9000"
+                 [(ngModel)]="tenantForm.monthlyRent" />
+        </div>
+
+        <div class="field">
+          <label for="tdep">Deposit (Rs.)</label>
+          <input id="tdep" type="number" min="0" placeholder="18000"
+                 [(ngModel)]="tenantForm.securityDeposit" />
+        </div>
+
+        <div class="field">
+          <label for="tjoin">Joining date</label>
+          <input id="tjoin" type="date" [(ngModel)]="tenantForm.joinDate" />
+        </div>
+      </div>
+
+      @if (sheetError(); as err) {
+        <p class="error-text" role="alert">{{ err }}</p>
+      }
+
+      <div class="actions">
+        <button type="button" class="btn btn-primary" [disabled]="busy()" (click)="saveTenant()">
+          {{ busy() ? 'Saving…' : editingTenant() ? 'Save changes' : 'Move in and send welcome mail' }}
+        </button>
+        <button type="button" class="btn btn-ghost" (click)="close()">Cancel</button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- ─────────── Receipt sheet ─────────── -->
+@if (sheet() === 'receipt') {
+  <div class="backdrop" (click)="close()">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <div class="modal-head">
+        <div>
+          <h3>Send receipt</h3>
+          <p>
+            {{ activeOccupant()?.name }} · {{ activeFlat()?.flatNo }} /
+            {{ activeOccupant()?.roomName }}
+          </p>
+        </div>
+        <button type="button" class="x" aria-label="Close" (click)="close()">
+          <th-icon name="close" />
+        </button>
+      </div>
+
+      <p class="notice">
+        This is what puts the money in your books. The PDF goes to
+        <strong>{{ activeOccupant()?.email }}</strong> and the dashboard updates immediately.
+      </p>
+
+      <div class="grid2">
+        <div class="field">
+          <label for="rfrom">Period from</label>
+          <input id="rfrom" type="date" [(ngModel)]="receiptForm.fromDate" />
+        </div>
+        <div class="field">
+          <label for="rto">Period to</label>
+          <input id="rto" type="date" [(ngModel)]="receiptForm.toDate" />
+        </div>
+        <div class="field">
+          <label for="ramt">Amount (Rs.)</label>
+          <input id="ramt" type="number" min="0" [(ngModel)]="receiptForm.amount" />
+        </div>
+        <div class="field">
+          <label for="rmode">Payment mode</label>
+          <select id="rmode" [(ngModel)]="receiptForm.paymentMode">
+            @for (m of modes; track m) {
+              <option [value]="m">{{ m }}</option>
+            }
+          </select>
+        </div>
+        <div class="field">
+          <label for="rtxn">Transaction ID <span class="opt">optional</span></label>
+          <input id="rtxn" type="text" placeholder="UPI ref" [(ngModel)]="receiptForm.transactionId" />
+        </div>
+        <div class="field">
+          <label for="rpaid">Paid on</label>
+          <input id="rpaid" type="date" [(ngModel)]="receiptForm.paidOn" />
+        </div>
+        <div class="field span2">
+          <label for="rnotes">Notes <span class="opt">optional</span></label>
+          <input id="rnotes" type="text" placeholder="Paid 3 days late, waived"
+                 [(ngModel)]="receiptForm.notes" />
+        </div>
+      </div>
+
+      @if (sheetError(); as err) {
+        <p class="error-text" role="alert">{{ err }}</p>
+      }
+
+      <div class="actions">
+        <button type="button" class="btn btn-gold" [disabled]="busy()" (click)="send()">
+          <th-icon name="mail" />
+          {{ busy() ? 'Sending…' : 'Generate PDF and email it' }}
+        </button>
+        <button type="button" class="btn btn-ghost" (click)="close()">Cancel</button>
+      </div>
+    </div>
+  </div>
+}
