@@ -124,7 +124,11 @@ export class DashboardComponent {
     }
   }
 
-  /** The month-by-month table, exactly as shown for the chosen span. */
+  /**
+   * A row per month for the chosen span. This is now the only place the
+   * month figures can be read line by line — the table that used to print
+   * them under the chart is gone.
+   */
   exportMonthsCsv(): void {
     const d = this.data();
     if (!d || d.months.length === 0) {
@@ -159,10 +163,6 @@ export class DashboardComponent {
       ['Name', 'Flat', 'Room', 'Phone', 'Rent due'],
       d.pendingTenants.map((t) => [t.name, t.flatNo, t.roomName, t.phone, t.monthlyRent])
     );
-  }
-
-  monthTotal(key: 'collected' | 'expense' | 'net'): number {
-    return (this.data()?.months ?? []).reduce((n, m) => n + Number(m[key]), 0);
   }
 
   openRemindAll(): void {

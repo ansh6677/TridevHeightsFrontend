@@ -887,36 +887,6 @@
   }
 }
 
-tbody tr.current {
-  background: $gold-tint;
-
-  &:hover {
-    background: rgba(230, 162, 51, 0.18);
-  }
-}
-
-// The month you are looking at keeps its gold once each row is its own card.
-@media (max-width: 760px) {
-  .table-wrap.stacked tbody tr.current {
-    background: $gold-tint;
-    border-left-color: $gold;
-  }
-}
-
-.pill-now {
-  background: rgba(230, 162, 51, 0.28);
-  color: $gold-ink;
-  margin-left: 8px;
-}
-
-td.good {
-  color: $occupied;
-}
-
-td.bad {
-  color: $due;
-}
-
 .prow {
   display: flex;
   align-items: center;

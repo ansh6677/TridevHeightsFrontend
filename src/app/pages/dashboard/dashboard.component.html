@@ -50,7 +50,7 @@
       }
 
       <button type="button" class="btn btn-ghost btn-sm" [disabled]="!data()"
-              (click)="exportMonthsCsv()" title="Download the month-by-month table">
+              (click)="exportMonthsCsv()" title="Download every month's collected, spent and net">
         <th-icon name="download" />
         Download CSV
       </button>
@@ -278,68 +278,6 @@
             </button>
           }
         </div>
-      </div>
-    </section>
-
-    <!-- Month by month -->
-    <section class="card pane">
-      <div class="pane-head">
-        <h2>
-          <span class="pane-ico"><th-icon name="calendar" /></span>
-          Month by month
-        </h2>
-        <span class="muted small">
-          {{ span() }} months ending {{ d.monthLabel }}
-        </span>
-      </div>
-
-      <!-- Scrolls in place with the header pinned on a desk; on a phone each
-           month becomes its own little card with the column names printed
-           beside the figures, so nothing scrolls sideways. -->
-      <div class="table-wrap stacked scroll">
-        <table>
-          <thead>
-            <tr>
-              <th>Month</th>
-              <th class="num">Collected</th>
-              <th class="num">Expenses</th>
-              <th class="num">Net</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (m of d.months; track m.month) {
-              <tr [class.current]="m.month === d.month">
-                <td class="strong nowrap" data-label="Month">
-                  {{ m.label }}
-                  @if (m.month === d.month) {
-                    <span class="pill pill-now">this month</span>
-                  }
-                </td>
-                <td class="num good" data-label="Collected">
-                  Rs. {{ m.collected | number: '1.0-0' }}
-                </td>
-                <td class="num" data-label="Expenses">Rs. {{ m.expense | number: '1.0-0' }}</td>
-                <td class="num strong" [class.bad]="m.net < 0" data-label="Net">
-                  Rs. {{ m.net | number: '1.0-0' }}
-                </td>
-              </tr>
-            }
-          </tbody>
-          <tfoot>
-            <tr>
-              <td class="strong" data-label="All months">Total</td>
-              <td class="num strong" data-label="Collected">
-                Rs. {{ monthTotal('collected') | number: '1.0-0' }}
-              </td>
-              <td class="num strong" data-label="Expenses">
-                Rs. {{ monthTotal('expense') | number: '1.0-0' }}
-              </td>
-              <td class="num strong" [class.bad]="monthTotal('net') < 0" data-label="Net">
-                Rs. {{ monthTotal('net') | number: '1.0-0' }}
-              </td>
-            </tr>
-          </tfoot>
-        </table>
       </div>
     </section>
 
