@@ -50,6 +50,11 @@ $gold-soft: #f6c163;
 $gold-tint: #fdf3df;
 // Gold is unreadable as text; this is the ink used on any gold tint.
 $gold-ink: #7a5410;
+// And this is the ink for a solid gold surface, where $gold-ink is not
+// dark enough to clear 4.5:1 against the deep end of the gradient.
+$gold-deep: #2b1c05;
+// A deeper pour of the brand gold, for a surface rather than an accent.
+$grad-gold-deep: linear-gradient(135deg, #b8811a 0%, #d59a2b 48%, #e9ae42 100%);
 
 $success: #0f8a5f;
 $success-tint: #e6f6ee;
