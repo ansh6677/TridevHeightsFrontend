@@ -96,7 +96,12 @@
         <article class="card flat" [class.has-vacancy]="card.vacantSeats > 0">
           <header class="flat-head">
             <div class="flat-id">
-              <h2>{{ card.flatNo }}</h2>
+              <!-- The flat number is what you look for first on this card, so
+                   it is a solid brand tile rather than a line of dark text. -->
+              <h2 class="flat-tile">
+                <span class="tile-eyebrow">Flat</span>
+                <span class="tile-no">{{ card.flatNo }}</span>
+              </h2>
               @if (card.floor) {
                 <span class="muted tiny">{{ card.floor }} floor</span>
               }

@@ -84,27 +84,62 @@
 
 // ---------------------------------------------------------------
 //  Header with occupancy
+//
+//  The negative margins pull the head out to the card's own edges, so the
+//  tint reads as a header band across the top rather than a grey box
+//  floating inside a white one. The card clips it — .flat is overflow
+//  hidden with the card's radius — and the status rail, being absolutely
+//  positioned, still paints over the top of it.
 // ---------------------------------------------------------------
 .flat-head {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
   gap: 14px;
+  margin: -20px -20px 0 -23px;
+  padding: 16px 20px 15px 23px;
+  border-bottom: 1px solid $line;
+  background: linear-gradient(135deg, $navy-tint 0%, rgba(234, 241, 250, 0) 82%);
 }
 
 .flat-id {
   display: flex;
   flex-direction: column;
-  gap: 1px;
+  align-items: flex-start;
+  gap: 4px;
+}
 
-  h2 {
-    font-family: $font-heading;
-    font-size: 26px;
-    font-weight: 600;
-    color: $navy;
-    line-height: 1.05;
-    margin: 0;
-  }
+// A solid navy tile, the way the flat number is printed on the door.
+.flat-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  min-width: 64px;
+  padding: 6px 13px 8px;
+  margin: 0;
+  border-radius: $radius-sm;
+  background: $grad-primary;
+  color: #fff;
+  box-shadow: 0 2px 5px rgba(11, 18, 32, 0.14), 0 8px 18px rgba(28, 63, 110, 0.24);
+}
+
+.tile-eyebrow {
+  font-size: 8.5px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  opacity: 0.74;
+}
+
+.tile-no {
+  font-family: $font-heading;
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
 }
 
 .occupancy {
@@ -281,18 +316,23 @@
 //  Room bands — the hall is kept apart from the bedrooms, because it
 //  is a different kind of room and it is the one people ask about.
 // ---------------------------------------------------------------
+// Both bands are tinted now, each in its own colour with a rail down the
+// left. The bedrooms used to be a plain grey box beside a violet one, which
+// read as "the hall is a thing and these are the leftovers".
 .group {
   display: flex;
   flex-direction: column;
   gap: 11px;
-  border: 1px solid $line;
+  border: 1px solid $navy-tint-2;
+  border-left: 3px solid $navy-bright;
   border-radius: $radius-sm;
   padding: 12px;
-  background: rgba(11, 18, 32, 0.015);
+  background: linear-gradient(180deg, $navy-tint 0%, rgba(234, 241, 250, 0.25) 100%);
 }
 
 .group-hall {
   border-color: $hall-line;
+  border-left-color: $hall;
   background: linear-gradient(180deg, $hall-tint 0%, rgba(242, 236, 253, 0.25) 100%);
 }
 
@@ -313,13 +353,14 @@
   font-weight: 600;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: $navy;
-  background: $navy-tint;
+  // Solid, like the hall's — a pale navy pill on a pale navy band was the
+  // heading disappearing into the box it was labelling.
+  color: #fff;
+  background: $navy;
   border-radius: 999px;
   padding: 3px 11px;
 
   .group-hall & {
-    color: #fff;
     background: $hall;
   }
 }
@@ -867,13 +908,17 @@
     }
   }
 
+  // The band follows the card's narrower padding, or it would stop short
+  // of the edges and turn back into a box.
   .flat-head {
     grid-template-columns: auto minmax(0, 1fr);
     row-gap: 10px;
+    margin: -16px -15px 0 -18px;
+    padding: 14px 15px 13px 18px;
   }
 
-  .flat-id h2 {
-    font-size: 23px;
+  .tile-no {
+    font-size: 20px;
   }
 
   .head-actions {
