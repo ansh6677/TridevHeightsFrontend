@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { ApiService } from '../../core/api.service';
+import { AuthService } from '../../core/auth.service';
 import { csvName, downloadCsv } from '../../core/csv';
 import { errorText } from '../../core/error-text';
 import { lockScroll } from '../../core/scroll-lock';
@@ -31,6 +32,7 @@ export interface Trend {
 })
 export class DashboardComponent {
   private readonly api = inject(ApiService);
+  readonly auth = inject(AuthService);
 
   readonly data = signal<DashboardSummary | null>(null);
   readonly loading = signal(true);
@@ -160,8 +162,12 @@ export class DashboardComponent {
 
     downloadCsv(
       csvName('Pending', d.month),
-      ['Name', 'Flat', 'Room', 'Phone', 'Rent due'],
-      d.pendingTenants.map((t) => [t.name, t.flatNo, t.roomName, t.phone, t.monthlyRent])
+      ['Name', 'Flat', 'Room', 'Phone', 'Rent due', 'Month', 'Reminder sent', 'Reminded on'],
+      d.pendingTenants.map((t) => [
+        t.name, t.flatNo, t.roomName, t.phone, t.monthlyRent, d.monthLabel,
+        t.lastReminderAt ? 'Yes' : 'No',
+        t.lastReminderAt ? new Date(t.lastReminderAt).toLocaleString('en-IN') : ''
+      ])
     );
   }
 

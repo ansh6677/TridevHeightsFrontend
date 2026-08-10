@@ -22,6 +22,9 @@ export class ExpensesComponent {
   readonly payers = EXPENSE_PAYERS;
   readonly expenses = signal<Expense[]>([]);
   readonly loading = signal(true);
+
+  /** Which row action is in flight, so only that icon spins. */
+  readonly pending = signal<string | null>(null);
   readonly busy = signal(false);
   readonly month = signal(new Date().toISOString().slice(0, 7));
   readonly payerFilter = signal('');
@@ -109,12 +112,16 @@ export class ExpensesComponent {
     if (!confirm(`Delete "${expense.remark}"?`)) {
       return;
     }
+
+    this.pending.set('delete:' + expense.id);
     try {
       await this.api.deleteExpense(expense.id);
       this.say('Expense deleted.');
       await this.load();
     } catch (e) {
       this.say(errorText(e), true);
+    } finally {
+      this.pending.set(null);
     }
   }
 
@@ -127,8 +134,8 @@ export class ExpensesComponent {
 
     downloadCsv(
       csvName('Expenses', [this.month() || 'all-months', this.payerFilter()].filter(Boolean).join('_')),
-      ['Date', 'Month', 'Paid by', 'Remark', 'Amount'],
-      rows.map((e) => [e.expenseDate, e.month, e.paidBy, e.remark, e.amount])
+      ['Date', 'Month', 'Remark', 'Paid by', 'Amount'],
+      rows.map((e) => [e.expenseDate, e.month, e.remark, e.paidBy, e.amount])
     );
   }
 

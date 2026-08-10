@@ -1,7 +1,8 @@
-<div class="page">
   @if (toast(); as t) {
-    <div class="toast" [class.bad]="t.bad" role="status">{{ t.text }}</div>
-  }
+  <div class="toast" [class.bad]="t.bad" role="status" title="Tap to dismiss"
+     (click)="toast.set(null)">{{ t.text }}</div>
+}
+<div class="page">
 
   <div class="page-head">
     <div>
@@ -83,16 +84,22 @@
                 <td data-label="Mode"><span class="mode">{{ r.paymentMode }}</span></td>
                 <td class="row-actions">
                   <button type="button" class="link" title="Download the PDF"
+                          [disabled]="pending() !== null"
+                          [class.is-loading]="pending() === 'pdf:' + r.id"
                           (click)="download(r)">
                     <th-icon name="download" />
                     PDF
                   </button>
                   @if (auth.isAdmin()) {
-                    <button type="button" class="link" title="Email it again" (click)="resend(r)">
+                    <button type="button" class="link" title="Email it again" [disabled]="pending() !== null"
+                            [class.is-loading]="pending() === 'resend:' + r.id"
+                            (click)="resend(r)">
                       <th-icon name="mail" />
                       Resend
                     </button>
                     <button type="button" class="link danger" title="Delete this receipt"
+                            [disabled]="pending() !== null"
+                            [class.is-loading]="pending() === 'delete:' + r.id"
                             (click)="remove(r)">
                       <th-icon name="trash" />
                       Delete

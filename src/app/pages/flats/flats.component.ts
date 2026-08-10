@@ -8,10 +8,11 @@ import { errorText } from '../../core/error-text';
 import { lockScroll } from '../../core/scroll-lock';
 import { IconComponent } from '../../shared/icon.component';
 import {
-  FlatCard, isHallRoom, Occupant, PAYMENT_MODES, ROOM_SUGGESTIONS, RoomSpec, RoomView
+  FlatCard, FlatGender, isHallRoom, Occupant, PAYMENT_MODES, Receipt, ROOM_SUGGESTIONS,
+  RoomSpec, RoomView
 } from '../../core/models';
 
-type Sheet = 'flat' | 'tenant' | 'receipt' | null;
+type Sheet = 'flat' | 'tenant' | 'receipt' | 'profile' | 'vacate' | null;
 
 /** A room plus the colour code it is drawn in. */
 export interface RoomVM extends RoomView {
@@ -63,6 +64,14 @@ export class FlatsComponent {
   readonly cards = signal<FlatCard[]>([]);
   readonly loading = signal(true);
   readonly busy = signal(false);
+
+  /**
+   * Which single row action is in flight, as "verb:id".
+   *
+   * A shared busy flag would spin every icon on the card at once, so the
+   * person cannot tell which of the three they actually pressed.
+   */
+  readonly pending = signal<string | null>(null);
   readonly query = signal('');
   readonly toast = signal<{ text: string; bad?: boolean } | null>(null);
   readonly sheet = signal<Sheet>(null);
@@ -74,6 +83,7 @@ export class FlatsComponent {
   readonly editingTenant = signal(false);
 
   flatForm = blankFlat();
+  vacateForm = blankVacate();
   tenantForm = blankTenant();
   receiptForm = blankReceipt();
 
@@ -175,15 +185,17 @@ export class FlatsComponent {
       for (const room of card.rooms) {
         for (const o of room.occupants) {
           rows.push([
-            card.flatNo, card.floor ?? '', room.name, room.capacity,
+            card.flatNo, card.floor ?? '', card.gender ?? '', room.name, room.capacity,
             'Occupied', o.name, o.email, o.phone, o.monthlyRent,
+            o.securityDeposit ?? '', o.agreementChargeDue ?? '', o.joinDate ?? '',
+            o.onNotice ? 'Yes' : 'No', o.noticeEndsOn ?? '',
             o.paidThisMonth ? 'Yes' : 'No', o.receiptNoThisMonth ?? ''
           ]);
         }
         for (let i = 0; i < room.vacant; i++) {
           rows.push([
-            card.flatNo, card.floor ?? '', room.name, room.capacity,
-            'Vacant', '', '', '', '', '', ''
+            card.flatNo, card.floor ?? '', card.gender ?? '', room.name, room.capacity,
+            'Vacant', '', '', '', '', '', '', '', '', '', '', ''
           ]);
         }
       }
@@ -191,8 +203,9 @@ export class FlatsComponent {
 
     downloadCsv(
       csvName('Beds', new Date().toISOString().slice(0, 7)),
-      ['Flat', 'Floor', 'Room', 'Room beds', 'Status', 'Tenant', 'Email',
-       'Phone', 'Rent', 'Receipt sent', 'Receipt no'],
+      ['Flat', 'Floor', 'For', 'Room', 'Room beds', 'Status', 'Tenant', 'Email',
+       'Phone', 'Rent', 'Security deposit', 'Agreement charge', 'Date of shifting',
+       'On notice', 'Notice ends', 'Receipt sent', 'Receipt no'],
       rows
     );
   }
@@ -207,17 +220,19 @@ export class FlatsComponent {
     const rows: unknown[][] = [];
     for (const card of cards) {
       for (const room of card.rooms) {
-        rows.push([card.flatNo, room.name, room.capacity, room.filled, room.vacant]);
+        rows.push([card.flatNo, card.gender ?? '', room.name,
+                   room.capacity, room.filled, room.vacant]);
       }
-      rows.push([card.flatNo, 'ALL ROOMS', card.totalSeats, card.filledSeats, card.vacantSeats]);
+      rows.push([card.flatNo, card.gender ?? '', 'ALL ROOMS',
+                 card.totalSeats, card.filledSeats, card.vacantSeats]);
     }
 
     const t = this.totals();
-    rows.push(['ALL FLATS', '', t.seats, t.filled, t.vacant]);
+    rows.push(['ALL FLATS', '', '', t.seats, t.filled, t.vacant]);
 
     downloadCsv(
       csvName('Vacancy', new Date().toISOString().slice(0, 10)),
-      ['Flat', 'Room', 'Beds', 'Filled', 'Vacant'],
+      ['Flat', 'For', 'Room', 'Beds', 'Filled', 'Vacant'],
       rows
     );
   }
@@ -245,6 +260,7 @@ export class FlatsComponent {
       flatNo: card.flatNo,
       floor: card.floor ?? '',
       notes: card.notes ?? '',
+      gender: card.gender ?? null,
       rooms: card.rooms.map((r) => ({ name: r.name, capacity: r.capacity }))
     };
     this.open('flat');
@@ -283,6 +299,7 @@ export class FlatsComponent {
         flatNo: this.flatForm.flatNo.trim(),
         floor: this.flatForm.floor.trim() || undefined,
         notes: this.flatForm.notes.trim() || undefined,
+        gender: this.flatForm.gender ?? undefined,
         rooms: rooms.map((r) => ({ name: r.name.trim(), capacity: Number(r.capacity) }))
       };
       const existing = this.activeFlat();
@@ -331,11 +348,14 @@ export class FlatsComponent {
       roomName: occupant.roomName,
       name: occupant.name,
       email: occupant.email,
-      phone: occupant.phone,
+      phone: occupant.phone ?? '',
       monthlyRent: occupant.monthlyRent,
       securityDeposit: occupant.securityDeposit ?? null,
+      agreementCharge: occupant.agreementCharge ?? null,
       joinDate: occupant.joinDate ?? new Date().toISOString().slice(0, 10),
-      notes: ''
+      notes: '',
+      // Editing never sends mail on its own — that is a separate button.
+      sendWelcome: false
     };
     this.open('tenant');
   }
@@ -344,14 +364,6 @@ export class FlatsComponent {
     const f = this.tenantForm;
     if (!f.name.trim()) {
       this.sheetError.set('Enter the tenant name.');
-      return;
-    }
-    if (!f.email.trim()) {
-      this.sheetError.set('An email is required — receipts are sent there.');
-      return;
-    }
-    if (!f.phone.trim()) {
-      this.sheetError.set('Enter a phone number.');
       return;
     }
     if (!f.monthlyRent || Number(f.monthlyRent) <= 0) {
@@ -364,10 +376,12 @@ export class FlatsComponent {
         flatId: this.activeFlat()!.id,
         roomName: f.roomName,
         name: f.name.trim(),
-        email: f.email.trim(),
-        phone: f.phone.trim(),
+        email: f.email.trim() || undefined,
+        sendWelcomeEmail: f.sendWelcome && !!f.email.trim(),
+        phone: f.phone.trim() || undefined,
         monthlyRent: Number(f.monthlyRent),
         securityDeposit: f.securityDeposit === null ? undefined : Number(f.securityDeposit),
+        agreementCharge: f.agreementCharge === null ? undefined : Number(f.agreementCharge),
         joinDate: f.joinDate,
         notes: f.notes.trim() || undefined
       };
@@ -378,19 +392,154 @@ export class FlatsComponent {
         this.say(`${body.name} updated.`);
       } else {
         await this.api.addTenant(body);
-        this.say(`${body.name} moved into ${body.roomName}. Welcome email sent.`);
+        this.say(
+          body.sendWelcomeEmail
+            ? `${body.name} moved into ${body.roomName}. Welcome email sent to ${body.email}.`
+            : `${body.name} moved into ${body.roomName}. No email sent.`
+        );
       }
+    });
+  }
+
+  /**
+   * Everything on file about one tenant, read only.
+   *
+   * Their receipts are fetched here rather than carried on the card, because
+   * a flat with a dozen beds would otherwise drag every receipt ever raised
+   * into the list request.
+   */
+  async openProfile(card: FlatCard, occupant: Occupant): Promise<void> {
+    this.activeFlat.set(card);
+    this.activeOccupant.set(occupant);
+    this.profileReceipts.set([]);
+    this.open('profile');
+
+    this.profileLoading.set(true);
+    try {
+      this.profileReceipts.set(await this.api.receiptsFor(occupant.id));
+    } catch (e) {
+      this.say(errorText(e, 'Could not load their receipts.'), true);
+    } finally {
+      this.profileLoading.set(false);
+    }
+  }
+
+  /** Days left on a running notice, negative once it has run out. */
+  noticeDaysLeft(o: Occupant | null): number | null {
+    if (!o?.noticeEndsOn) {
+      return null;
+    }
+    const end = new Date(o.noticeEndsOn + 'T00:00:00');
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return Math.round((end.getTime() - today.getTime()) / 86400000);
+  }
+
+  async startNotice(occupant: Occupant): Promise<void> {
+    const today = new Date().toISOString().slice(0, 10);
+    if (!confirm(
+      `Put ${occupant.name} on notice from ${today}? Notice runs one calendar month. `
+      + `Nothing else changes — they keep the bed and the rent stays due.`
+    )) {
+      return;
+    }
+
+    this.pending.set('notice:' + occupant.id);
+    try {
+      await this.api.startNotice(occupant.id, { noticeGivenOn: today });
+      this.say(`${occupant.name} is on notice. The bed can be shown to someone else.`);
+      await this.load();
+    } catch (e) {
+      this.say(errorText(e), true);
+    } finally {
+      this.pending.set(null);
+    }
+  }
+
+  async cancelNotice(occupant: Occupant): Promise<void> {
+    if (!confirm(`Withdraw ${occupant.name}'s notice? They stay on as before.`)) {
+      return;
+    }
+
+    this.pending.set('notice:' + occupant.id);
+    try {
+      await this.api.cancelNotice(occupant.id);
+      this.say(`${occupant.name}'s notice withdrawn.`);
+      await this.load();
+    } catch (e) {
+      this.say(errorText(e), true);
+    } finally {
+      this.pending.set(null);
+    }
+  }
+
+  // -------------------------------------------------------------
+  //  Moving out
+  // -------------------------------------------------------------
+  openVacate(card: FlatCard, occupant: Occupant): void {
+    this.activeFlat.set(card);
+    this.activeOccupant.set(occupant);
+
+    this.vacateForm = blankVacate();
+    this.vacateForm.deposit = occupant.securityDeposit ?? 0;
+    this.vacateForm.refund = occupant.securityDeposit ?? 0;
+    this.vacateForm.sendEmail = this.hasEmail(occupant);
+    this.open('vacate');
+  }
+
+  /** Holding money back reduces the refund, so the two always agree. */
+  onDeductionsChanged(): void {
+    const held = Number(this.vacateForm.deductions || 0);
+    const deposit = Number(this.vacateForm.deposit || 0);
+    this.vacateForm.refund = Math.max(0, deposit - held);
+  }
+
+  async confirmVacate(): Promise<void> {
+    const f = this.vacateForm;
+    const held = Number(f.deductions || 0);
+    const refund = Number(f.refund || 0);
+
+    if (refund + held > Number(f.deposit || 0)) {
+      this.sheetError.set(
+        'The refund and the deductions come to more than the deposit that was held.'
+      );
+      return;
+    }
+    if (held > 0 && !f.deductionNotes.trim()) {
+      this.sheetError.set('Say what was deducted and why — it goes on the settlement note.');
+      return;
+    }
+
+    const name = this.activeOccupant()!.name;
+    await this.run(async () => {
+      await this.api.settleAndVacate(this.activeOccupant()!.id, {
+        exitDate: f.exitDate,
+        refundAmount: refund,
+        deductions: held || undefined,
+        deductionNotes: f.deductionNotes.trim() || undefined,
+        sendEmail: f.sendEmail
+      });
+      this.say(
+        f.sendEmail
+          ? `${name} moved out. Settlement note sent, Rs ${refund.toLocaleString('en-IN')} to refund.`
+          : `${name} moved out. Rs ${refund.toLocaleString('en-IN')} to refund.`
+      );
     });
   }
 
   /** Nudge one tenant straight from their bed slot. */
   async remind(occupant: Occupant): Promise<void> {
     const month = new Date().toISOString().slice(0, 7);
-    this.busy.set(true);
+    this.pending.set('remind:' + occupant.id);
     try {
       const result = await this.api.sendReminders(month, [occupant.id]);
       if (result.sent > 0) {
-        this.say(`Reminder sent to ${occupant.name} at ${occupant.email}.`);
+        // Without the guard a tenant with no address gives "sent to X at ."
+        this.say(
+          this.hasEmail(occupant)
+            ? `Reminder sent to ${occupant.name} at ${occupant.email}.`
+            : `Reminder sent to ${occupant.name}.`
+        );
       } else {
         const why = result.skipped[0]?.reason ?? 'nothing to remind about';
         this.say(`${occupant.name} was not reminded — ${why}.`, true);
@@ -399,7 +548,7 @@ export class FlatsComponent {
     } catch (e) {
       this.say(errorText(e), true);
     } finally {
-      this.busy.set(false);
+      this.pending.set(null);
     }
   }
 
@@ -422,20 +571,47 @@ export class FlatsComponent {
     return `${Math.round(hours / 24)}d ago`;
   }
 
+  hasPhone(o: Occupant | null): boolean {
+    return !!o && !!o.phone && o.phone.trim().length > 0;
+  }
+
+  hasEmail(o: Occupant | null): boolean {
+    return !!o && !!o.email && o.email.trim().length > 0;
+  }
+
+  /**
+   * Sends the welcome mail on demand — for someone added without an address
+   * who has since had one filled in.
+   */
+  async sendWelcome(occupant: Occupant): Promise<void> {
+    this.pending.set('welcome:' + occupant.id);
+    try {
+      const res = await this.api.sendWelcomeEmail(occupant.id);
+      this.say(res.message);
+    } catch (e) {
+      this.say(errorText(e), true);
+    } finally {
+      this.pending.set(null);
+    }
+  }
+
   async vacate(occupant: Occupant): Promise<void> {
     const today = new Date().toISOString().slice(0, 10);
     if (!confirm(
-      `Mark ${occupant.name} as vacated on ${today}? The bed frees up and their `
-      + `receipts stay on record.`
+      `Vacate ${occupant.name}? Their record is removed and the bed frees up. `
+      + `Receipts already raised for them stay on file.`
     )) {
       return;
     }
+    this.pending.set('vacate:' + occupant.id);
     try {
       await this.api.vacateTenant(occupant.id, today);
       this.say(`${occupant.name} moved out. That bed is now vacant.`);
       await this.load();
     } catch (e) {
       this.say(errorText(e), true);
+    } finally {
+      this.pending.set(null);
     }
   }
 
@@ -446,8 +622,91 @@ export class FlatsComponent {
     this.activeFlat.set(card);
     this.activeOccupant.set(occupant);
     this.receiptForm = blankReceipt();
-    this.receiptForm.amount = occupant.monthlyRent;
+
+    // Their own cycle, not the calendar month. Someone who joined on the 28th
+    // is billed 28th to 27th, so defaulting to the 1st would bill them for
+    // three days they were not there.
+    if (occupant.periodFrom && occupant.periodTo) {
+      this.receiptForm.fromDate = occupant.periodFrom;
+      this.receiptForm.toDate = occupant.periodTo;
+    }
+
+    // Rent plus whatever fee has run up, so the figure needs no mental
+    // arithmetic. It stays editable — waiving it is a decision, not a bug.
+    this.receiptForm.amount = occupant.payableNow ?? occupant.monthlyRent;
+
+    // Offered until they have actually been collected, then never again.
+    // Ticked by default the first time, because that is almost always what
+    // is happening — but it stays a decision rather than a surprise.
+    this.receiptForm.includeExtras = !occupant.depositCollected;
+    if (this.receiptForm.includeExtras) {
+      this.receiptForm.deposit = occupant.securityDepositDue ?? null;
+      this.receiptForm.agreement = occupant.agreementChargeDue ?? null;
+    }
+
     this.open('receipt');
+  }
+
+  // -------------------------------------------------------------
+  //  Tenant profile — read only
+  // -------------------------------------------------------------
+  readonly profileReceipts = signal<Receipt[]>([]);
+  readonly profileLoading = signal(false);
+
+  /** What the tenant has paid in total, across every receipt. */
+  profilePaidTotal(): number {
+    return this.profileReceipts().reduce((sum, r) => sum + Number(r.amount || 0), 0);
+  }
+
+  async downloadFromProfile(receipt: Receipt): Promise<void> {
+    this.pending.set('pdf:' + receipt.id);
+    try {
+      await this.api.downloadReceiptPdf(receipt);
+    } catch (e) {
+      this.say(errorText(e, 'Could not download that PDF.'), true);
+    } finally {
+      this.pending.set(null);
+    }
+  }
+
+  /** Rent, deposit and agreement charge added up, for the form to show. */
+  receiptTotal(): number {
+    return Number(this.receiptForm.amount || 0) + Number(this.extrasTotal());
+  }
+
+  extrasTotal(): number {
+    if (!this.receiptForm.includeExtras) {
+      return 0;
+    }
+    return Number(this.receiptForm.deposit || 0) + Number(this.receiptForm.agreement || 0);
+  }
+
+  /** True when this receipt is collecting more than rent. */
+  hasExtras(): boolean {
+    return this.receiptForm.includeExtras && this.extrasTotal() > 0;
+  }
+
+  /** Ticking it back on refills from the tenant's own figures. */
+  toggleExtras(on: boolean): void {
+    this.receiptForm.includeExtras = on;
+    const o = this.activeOccupant();
+    if (on && o) {
+      this.receiptForm.deposit = this.receiptForm.deposit ?? o.securityDepositDue ?? null;
+      this.receiptForm.agreement = this.receiptForm.agreement ?? o.agreementChargeDue ?? null;
+    }
+  }
+
+  /** The fee sitting inside the prefilled amount, if any. */
+  lateFeeOn(o: Occupant | null): number {
+    return o?.lateFee ?? 0;
+  }
+
+  /** Puts the amount back to rent alone, for when the fee is being waived. */
+  waiveLateFee(): void {
+    const o = this.activeOccupant();
+    if (o) {
+      this.receiptForm.amount = o.monthlyRent;
+    }
   }
 
   async send(): Promise<void> {
@@ -467,12 +726,20 @@ export class FlatsComponent {
         fromDate: f.fromDate,
         toDate: f.toDate,
         amount: Number(f.amount),
+        depositAmount: f.includeExtras && f.deposit ? Number(f.deposit) : undefined,
+        agreementCharge: f.includeExtras && f.agreement ? Number(f.agreement) : undefined,
         paymentMode: f.paymentMode,
         transactionId: f.transactionId.trim() || undefined,
         paidOn: f.paidOn,
-        notes: f.notes.trim() || undefined
+        notes: f.notes.trim() || undefined,
+        sendEmail: f.sendEmail && this.hasEmail(this.activeOccupant())
       });
-      this.say(`${saved.receiptNo} sent to ${this.activeOccupant()!.email}.`);
+
+      this.say(
+        f.sendEmail && this.hasEmail(this.activeOccupant())
+          ? `${saved.receiptNo} sent to ${this.activeOccupant()!.email}.`
+          : `${saved.receiptNo} recorded. Download the PDF from the Receipts page.`
+      );
     });
   }
 
@@ -528,12 +795,14 @@ function group(
 }
 
 function blankFlat(): {
-  flatNo: string; floor: string; notes: string; rooms: RoomSpec[];
+  flatNo: string; floor: string; notes: string;
+  gender: FlatGender | null; rooms: RoomSpec[];
 } {
   return {
     flatNo: '',
     floor: '',
     notes: '',
+    gender: null,
     // A sensible starting shape — most flats here are a hall plus bedrooms.
     rooms: [
       { name: 'Hall', capacity: 2 },
@@ -550,8 +819,10 @@ function blankTenant() {
     phone: '',
     monthlyRent: null as number | null,
     securityDeposit: null as number | null,
+    agreementCharge: null as number | null,
     joinDate: new Date().toISOString().slice(0, 10),
-    notes: ''
+    notes: '',
+    sendWelcome: true
   };
 }
 
@@ -570,6 +841,21 @@ function blankReceipt() {
     paymentMode: 'UPI' as string,
     transactionId: '',
     paidOn: new Date().toISOString().slice(0, 10),
-    notes: ''
+    notes: '',
+    sendEmail: true,
+    includeExtras: false,
+    deposit: null as number | null,
+    agreement: null as number | null
+  };
+}
+
+function blankVacate() {
+  return {
+    exitDate: new Date().toISOString().slice(0, 10),
+    deposit: 0 as number,
+    deductions: null as number | null,
+    deductionNotes: '',
+    refund: 0 as number,
+    sendEmail: true
   };
 }

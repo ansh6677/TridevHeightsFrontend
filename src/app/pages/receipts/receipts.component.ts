@@ -21,6 +21,9 @@ export class ReceiptsComponent {
 
   readonly receipts = signal<Receipt[]>([]);
   readonly loading = signal(true);
+
+  /** Which row action is in flight, as "verb:id", so only that icon spins. */
+  readonly pending = signal<string | null>(null);
   readonly month = signal(new Date().toISOString().slice(0, 7));
   readonly toast = signal<{ text: string; bad?: boolean } | null>(null);
 
@@ -47,35 +50,47 @@ export class ReceiptsComponent {
   }
 
   async download(receipt: Receipt): Promise<void> {
+    this.pending.set('pdf:' + receipt.id);
     try {
       await this.api.downloadReceiptPdf(receipt);
     } catch (e) {
       this.say(errorText(e, 'Could not download that PDF.'), true);
+    } finally {
+      this.pending.set(null);
     }
   }
 
   async resend(receipt: Receipt): Promise<void> {
+    this.pending.set('resend:' + receipt.id);
     try {
       await this.api.resendReceipt(receipt.id);
       this.say(`${receipt.receiptNo} queued for ${receipt.tenantName}.`);
     } catch (e) {
       this.say(errorText(e), true);
+    } finally {
+      this.pending.set(null);
     }
   }
 
   async remove(receipt: Receipt): Promise<void> {
+    // Ask before showing any spinner — a cancelled confirm should leave the
+    // button exactly as it was.
     if (!confirm(
       `Delete ${receipt.receiptNo}? The money comes out of your totals, and the number `
       + `is not reused — the same as a paper book skipping a cancelled page.`
     )) {
       return;
     }
+
+    this.pending.set('delete:' + receipt.id);
     try {
       await this.api.deleteReceipt(receipt.id);
       this.say(`${receipt.receiptNo} deleted.`);
       await this.load();
     } catch (e) {
       this.say(errorText(e), true);
+    } finally {
+      this.pending.set(null);
     }
   }
 
@@ -87,12 +102,16 @@ export class ReceiptsComponent {
 
     downloadCsv(
       csvName('Receipts', this.month()),
-      ['Receipt no', 'Tenant', 'Flat', 'Room', 'From', 'To',
-       'Amount', 'Mode', 'Transaction ID', 'Paid on'],
+      ['Receipt no', 'Tenant', 'Flat', 'Room', 'Month', 'From', 'To',
+       'Rent', 'Deposit', 'Agreement charge', 'Total',
+       'Mode', 'Transaction ID', 'Paid on', 'Notes'],
       rows.map((r) => [
-        r.receiptNo, r.tenantName, r.flatNo, r.roomName ?? '',
-        r.fromDate, r.toDate, r.amount, r.paymentMode,
-        r.transactionId ?? '', r.paidOn
+        r.receiptNo, r.tenantName, r.flatNo, r.roomName ?? '', r.month,
+        r.fromDate, r.toDate,
+        // rent falls back to the total on receipts raised before the split
+        r.rentAmount ?? r.amount, r.depositAmount ?? '', r.agreementCharge ?? '',
+        r.amount, r.paymentMode,
+        r.transactionId ?? '', r.paidOn, r.notes ?? ''
       ])
     );
   }

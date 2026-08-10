@@ -24,6 +24,9 @@
   padding: 3px;
 
   button {
+    // 34px so a thumb can hit it. Anything under about 30 is a target you
+    // aim at rather than tap.
+    min-height: 34px;
     font-family: $font-body;
     font-size: 13px;
     font-weight: 600;
@@ -100,7 +103,7 @@
 // colour of the thing it touches.
 .quick {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(210px, 100%), 1fr));
   gap: 12px;
 }
 
@@ -194,32 +197,44 @@
 }
 
 .qa-green {
+  // Each of the four carries the tint of the thing it leads to, the way the
+  // first one already did. One tinted card beside three white ones read as
+  // an accident rather than a set.
+  border-color: $occupied-line;
+  background: linear-gradient(100deg, $occupied-tint 0%, $surface 55%);
+
   .qa-ico {
     background: $grad-green;
   }
 
   &:hover {
-    border-color: $occupied-line;
+    border-color: $occupied;
   }
 }
 
 .qa-red {
+  border-color: $due-line;
+  background: linear-gradient(100deg, $due-tint 0%, $surface 55%);
+
   .qa-ico {
     background: $grad-red;
   }
 
   &:hover {
-    border-color: $due-line;
+    border-color: $due;
   }
 }
 
 .qa-navy {
+  border-color: $navy-tint-2;
+  background: linear-gradient(100deg, $navy-tint 0%, $surface 55%);
+
   .qa-ico {
     background: $grad-primary;
   }
 
   &:hover {
-    border-color: rgba(53, 114, 196, 0.3);
+    border-color: $navy-bright;
   }
 }
 
@@ -671,9 +686,19 @@
 // them, because whatever is inside them scrolls.
 .two-col {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(320px, 100%), 1fr));
   gap: 20px;
   align-items: stretch;
+}
+
+/*
+ * A grid item defaults to min-width:auto, which means it refuses to shrink
+ * below its own content. On a 320px screen that let the card grow 20px wider
+ * than its own column and pushed the whole page sideways — with the header
+ * band, pulled out to the card's edges, hanging off the end of the screen.
+ */
+.two-col > * {
+  min-width: 0;
 }
 
 .two-col > .pane {
@@ -730,6 +755,11 @@
 
 // Tapping the number on a phone should just ring them.
 .tel {
+  // A phone number on a card is the one thing people actually tap on a
+  // phone, so it needs a real target rather than the height of the text.
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
   color: $navy;
   font-weight: 600;
   text-decoration: none;
@@ -984,4 +1014,12 @@
   height: 8px;
   border-radius: 50%;
   background: $gold;
+}
+
+
+// The agreement charge is earned money, so it reads gold rather than navy —
+// the same colour the app already uses for anything kept.
+.tone-gold {
+  border-color: rgba(232, 166, 61, 0.35);
+  background: linear-gradient(135deg, $gold-tint 0%, $surface 62%);
 }

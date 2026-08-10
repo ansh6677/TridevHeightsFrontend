@@ -145,6 +145,7 @@ import { AuthService } from '../../core/auth.service';
       }
 
       .reveal {
+        min-height: 32px;
         position: absolute;
         top: 50%;
         right: 8px;

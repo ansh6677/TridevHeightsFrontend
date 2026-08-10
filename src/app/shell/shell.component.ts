@@ -19,7 +19,26 @@ const RAIL_KEY = 'th-pms-rail';
         </button>
         <img src="assets/logo-mark.png" alt="" width="28" height="24" />
         <strong>Tridev Heights</strong>
-        <span class="top-role" [class.viewer]="!auth.isAdmin()">{{ auth.roleLabel() }}</span>
+
+        @if (auth.lastLoginLabel(); as seen) {
+          <span class="seen-card" [title]="'You were last signed in on ' + seen">
+            <svg viewBox="0 0 20 20" width="13" height="13" aria-hidden="true">
+              <circle cx="10" cy="10" r="7.2" fill="none" stroke="currentColor"
+                      stroke-width="1.6" />
+              <path d="M10 6.2V10l2.6 1.6" fill="none" stroke="currentColor"
+                    stroke-width="1.6" stroke-linecap="round" />
+            </svg>
+            <span class="seen-text">
+              <em>Last used</em>
+              <b>
+                {{ seen }}
+                @if (auth.lastLoginBy(); as who) {
+                  · {{ who }}
+                }
+              </b>
+            </span>
+          </span>
+        }
       </header>
 
       <div class="scrim" (click)="drawer.set(false)"></div>
@@ -91,6 +110,19 @@ const RAIL_KEY = 'th-pms-rail';
             <span class="label">Expenses</span>
           </a>
 
+          <a routerLink="/partners" routerLinkActive="on" title="Partner spending"
+             (click)="drawer.set(false)">
+            <i class="dot d-gold"></i>
+            <svg viewBox="0 0 20 20" aria-hidden="true">
+              <circle cx="7" cy="7" r="3" fill="currentColor" />
+              <circle cx="14" cy="8" r="2.4" fill="currentColor" opacity="0.75" />
+              <path d="M2 17c0-2.8 2.2-5 5-5s5 2.2 5 5z" fill="currentColor" />
+              <path d="M13 17c0-2 .8-3.6 2-4.4 1.8.5 3 2.2 3 4.4z"
+                    fill="currentColor" opacity="0.75" />
+            </svg>
+            <span class="label">Partners</span>
+          </a>
+
           @if (auth.isAdmin()) {
             <a routerLink="/users" routerLinkActive="on" title="Logins"
                (click)="drawer.set(false)">
@@ -111,6 +143,11 @@ const RAIL_KEY = 'th-pms-rail';
             <span class="whotext">
               {{ auth.name() }}
               <em [class.viewer]="!auth.isAdmin()">{{ auth.roleLabel() }}</em>
+              @if (auth.lastLoginLabel(); as seen) {
+                <em class="seen">
+                  Last used {{ seen }}@if (auth.lastLoginBy(); as who) { · {{ who }}}
+                </em>
+              }
             </span>
           </span>
           <button type="button" class="out" title="Sign out" (click)="signOut()">
@@ -347,8 +384,63 @@ const RAIL_KEY = 'th-pms-rail';
         background: #e35349;
       }
 
+      .d-gold {
+        background: $gold;
+      }
+
       .d-hall {
         background: #a78bfa;
+      }
+
+      /*
+       * The role was a badge that never changed and never needed acting on.
+       * What is worth a glance every morning is when this account was last
+       * used — if that is not when you last used it, something is wrong.
+       */
+      .seen-card {
+        margin-left: auto;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 5px 11px 5px 9px;
+        border-radius: 999px;
+        color: rgba(255, 255, 255, 0.82);
+        background: rgba(255, 255, 255, 0.07);
+        border: 1px solid rgba(255, 255, 255, 0.11);
+        white-space: nowrap;
+
+        svg {
+          flex: none;
+          color: $gold;
+        }
+      }
+
+      .seen-text {
+        display: flex;
+        flex-direction: column;
+        line-height: 1.15;
+      }
+
+      .seen-text em {
+        font-style: normal;
+        font-size: 9px;
+        font-weight: 600;
+        letter-spacing: 0.07em;
+        text-transform: uppercase;
+        color: rgba(255, 255, 255, 0.45);
+      }
+
+      .seen-text b {
+        font-size: 11.5px;
+        font-weight: 600;
+      }
+
+      .whotext .seen {
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 10.5px;
+        font-weight: 500;
+        letter-spacing: 0;
+        text-transform: none;
       }
 
       .who {
@@ -506,8 +598,9 @@ const RAIL_KEY = 'th-pms-rail';
 
         .topbar {
           display: flex;
+          flex-wrap: wrap;
           align-items: center;
-          gap: 11px;
+          gap: 4px 11px;
           position: sticky;
           top: 0;
           z-index: 40;
@@ -535,20 +628,13 @@ const RAIL_KEY = 'th-pms-rail';
           }
         }
 
-        .top-role {
-          margin-left: auto;
-          font-size: 10.5px;
-          font-weight: 600;
-          letter-spacing: 0.05em;
-          text-transform: uppercase;
-          color: $gold;
-          background: rgba(230, 162, 51, 0.14);
-          border-radius: 999px;
-          padding: 4px 10px;
-
-          &.viewer {
-            color: rgba(255, 255, 255, 0.6);
-            background: rgba(255, 255, 255, 0.08);
+        // On a narrow phone the card drops to its own line rather than
+        // squeezing the name beside it.
+        @media (max-width: 430px) {
+          .seen-card {
+            margin-left: 0;
+            flex-basis: 100%;
+            justify-content: flex-start;
           }
         }
 

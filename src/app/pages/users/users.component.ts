@@ -24,6 +24,9 @@ export class UsersComponent {
 
   readonly users = signal<DeskUser[]>([]);
   readonly loading = signal(true);
+
+  /** Which row action is in flight, so only that icon spins. */
+  readonly pending = signal<string | null>(null);
   readonly busy = signal(false);
   readonly sheetOpen = signal(false);
   readonly editing = signal<DeskUser | null>(null);
@@ -128,12 +131,16 @@ export class UsersComponent {
     if (turningOff && !confirm(`Deactivate ${user.name}? They will not be able to sign in.`)) {
       return;
     }
+
+    this.pending.set('active:' + user.id);
     try {
       await this.api.setUserActive(user.id, !user.active);
       this.say(turningOff ? `${user.name} deactivated.` : `${user.name} can sign in again.`);
       await this.load();
     } catch (e) {
       this.say(errorText(e), true);
+    } finally {
+      this.pending.set(null);
     }
   }
 
@@ -141,12 +148,16 @@ export class UsersComponent {
     if (!confirm(`Delete the login for ${user.email}? This cannot be undone.`)) {
       return;
     }
+
+    this.pending.set('delete:' + user.id);
     try {
       await this.api.deleteUser(user.id);
       this.say(`${user.name} deleted.`);
       await this.load();
     } catch (e) {
       this.say(errorText(e), true);
+    } finally {
+      this.pending.set(null);
     }
   }
 

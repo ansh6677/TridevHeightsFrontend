@@ -1,7 +1,8 @@
-<div class="page">
   @if (toast(); as t) {
-    <div class="toast" [class.bad]="t.bad" role="status">{{ t.text }}</div>
-  }
+  <div class="toast" [class.bad]="t.bad" role="status" title="Tap to dismiss"
+     (click)="toast.set(null)">{{ t.text }}</div>
+}
+<div class="page">
 
   <div class="page-head">
     <div>
@@ -93,9 +94,14 @@
   } @else {
     <div class="cards">
       @for (card of views(); track card.id) {
-        <article class="card flat" [class.has-vacancy]="card.vacantSeats > 0">
+        <article class="card flat" [class.has-vacancy]="card.vacantSeats > 0"
+                 [class.for-boys]="card.gender === 'BOYS'"
+                 [class.for-girls]="card.gender === 'GIRLS'">
           <header class="flat-head">
             <div class="flat-id">
+              @if (card.gender) {
+                <span class="gender-tag">{{ card.gender === 'BOYS' ? 'Boys' : 'Girls' }}</span>
+              }
               <!-- The flat number is what you look for first on this card, so
                    it is a solid brand tile rather than a line of dark text. -->
               <h2 class="flat-tile">
@@ -214,13 +220,27 @@
 
                   <div class="slots">
                     @for (o of room.occupants; track o.id) {
-                      <div class="slot taken" [class.paid]="o.paidThisMonth"
+                      <div class="slot taken" [class.on-notice]="o.onNotice" [class.paid]="o.paidThisMonth"
                            [class.unpaid]="!o.paidThisMonth">
                         <div class="slot-top">
-                          <span class="who">{{ o.name }}</span>
+                          <button type="button" class="who who-link"
+                                  title="See everything on file"
+                                  (click)="openProfile(card, o)">{{ o.name }}</button>
                           <span class="rent">Rs. {{ o.monthlyRent | number: '1.0-0' }}</span>
                         </div>
-                        <span class="muted tiny mail">{{ o.email }}</span>
+                        @if (o.email) {
+                          <span class="muted tiny mail" [title]="o.email">{{ o.email }}</span>
+                        } @else {
+                          <span class="tiny no-mail">No email on file</span>
+                        }
+                        @if (!o.phone) {
+                          <span class="tiny no-mail">No phone on file</span>
+                        }
+                        @if (o.onNotice) {
+                          <span class="notice-tag">
+                            On notice &middot; leaves {{ o.noticeEndsOn | date: 'd MMM' }}
+                          </span>
+                        }
 
                         <div class="slot-foot">
                           @if (o.paidThisMonth) {
@@ -233,7 +253,9 @@
                               <th-icon name="receipt" />
                               Send receipt
                             </button>
-                            <button type="button" class="link remind" [disabled]="busy()"
+                            <button type="button" class="link remind"
+                                    [disabled]="pending() !== null"
+                                    [class.is-loading]="pending() === 'remind:' + o.id"
                                     [title]="'Email a rent reminder to ' + o.email"
                                     (click)="remind(o)">
                               <th-icon name="bell" />
@@ -252,8 +274,39 @@
                                       (click)="openEditTenant(card, o)">
                                 <th-icon name="edit" />
                               </button>
-                              <button type="button" class="link" title="Move this tenant out"
-                                      (click)="vacate(o)">
+                              @if (o.email) {
+                                <button type="button" class="link"
+                                        [disabled]="pending() !== null"
+                                        [class.is-loading]="pending() === 'welcome:' + o.id"
+                                        [title]="'Send the welcome email to ' + o.email"
+                                        (click)="sendWelcome(o)">
+                                  <th-icon name="mail" />
+                                </button>
+                              }
+                              <button type="button" class="link" title="See everything on file"
+                                      (click)="openProfile(card, o)">
+                                <th-icon name="user" />
+                              </button>
+                              @if (o.onNotice) {
+                                <button type="button" class="link"
+                                        title="Withdraw the notice"
+                                        [disabled]="pending() !== null"
+                                        [class.is-loading]="pending() === 'notice:' + o.id"
+                                        (click)="cancelNotice(o)">
+                                  <th-icon name="undo" />
+                                </button>
+                              } @else {
+                                <button type="button" class="link"
+                                        title="Put this tenant on notice"
+                                        [disabled]="pending() !== null"
+                                        [class.is-loading]="pending() === 'notice:' + o.id"
+                                        (click)="startNotice(o)">
+                                  <th-icon name="clock" />
+                                </button>
+                              }
+                              <button type="button" class="link" title="Move out and settle up"
+                                      [disabled]="pending() !== null"
+                                      (click)="openVacate(card, o)">
                                 <th-icon name="logout" />
                               </button>
                             </span>
@@ -313,6 +366,16 @@
           <label for="ffloor">Floor <span class="opt">optional</span></label>
           <input id="ffloor" type="text" placeholder="1st" [(ngModel)]="flatForm.floor" />
         </div>
+
+        <div class="field span2">
+          <label>Who is this flat for</label>
+          <div class="gender-pick">
+            <button type="button" class="gp gp-boys" [class.on]="flatForm.gender === 'BOYS'"
+                    (click)="flatForm.gender = 'BOYS'">Boys</button>
+            <button type="button" class="gp gp-girls" [class.on]="flatForm.gender === 'GIRLS'"
+                    (click)="flatForm.gender = 'GIRLS'">Girls</button>
+          </div>
+        </div>
       </div>
 
       <div class="rooms-editor">
@@ -358,7 +421,7 @@
       }
 
       <div class="actions">
-        <button type="button" class="btn btn-primary" [disabled]="busy()" (click)="saveFlat()">
+        <button type="button" class="btn btn-primary" [disabled]="busy()" [class.is-loading]="busy()" (click)="saveFlat()">
           {{ busy() ? 'Saving…' : editingFlat() ? 'Save changes' : 'Add flat' }}
         </button>
         <button type="button" class="btn btn-ghost" (click)="close()">Cancel</button>
@@ -382,7 +445,10 @@
       </div>
 
       @if (!editingTenant()) {
-        <p class="notice">A welcome email goes out as soon as you save.</p>
+        <p class="notice">
+          Email is optional. Leave it blank and this tenant simply gets no mail — add an
+          address later and you can send the welcome and any receipt from their card.
+        </p>
       }
 
       <div class="grid2">
@@ -392,13 +458,13 @@
         </div>
 
         <div class="field span2">
-          <label for="temail">Email <span class="opt">receipts go here</span></label>
+          <label for="temail">Email <span class="opt">optional — receipts go here</span></label>
           <input id="temail" type="email" autocapitalize="none" placeholder="rahul@example.com"
                  [(ngModel)]="tenantForm.email" />
         </div>
 
         <div class="field">
-          <label for="tphone">Phone</label>
+          <label for="tphone">Phone <span class="opt">optional</span></label>
           <input id="tphone" type="tel" placeholder="99301 12233" [(ngModel)]="tenantForm.phone" />
         </div>
 
@@ -415,6 +481,12 @@
         </div>
 
         <div class="field">
+          <label for="tagree">Agreement charge</label>
+          <input id="tagree" type="number" min="0" placeholder="2000"
+                 [(ngModel)]="tenantForm.agreementCharge" />
+        </div>
+
+        <div class="field">
           <label for="tjoin">Joining date</label>
           <input id="tjoin" type="date" [(ngModel)]="tenantForm.joinDate" />
         </div>
@@ -424,9 +496,22 @@
         <p class="error-text" role="alert">{{ err }}</p>
       }
 
+      @if (!editingTenant()) {
+        <label class="check" [class.off]="!tenantForm.email.trim()">
+          <input type="checkbox" [disabled]="!tenantForm.email.trim()"
+                 [(ngModel)]="tenantForm.sendWelcome" />
+          <span>
+            Send the welcome email
+            @if (!tenantForm.email.trim()) {
+              <em>— add an email address first</em>
+            }
+          </span>
+        </label>
+      }
+
       <div class="actions">
-        <button type="button" class="btn btn-primary" [disabled]="busy()" (click)="saveTenant()">
-          {{ busy() ? 'Saving…' : editingTenant() ? 'Save changes' : 'Move in and send welcome mail' }}
+        <button type="button" class="btn btn-primary" [disabled]="busy()" [class.is-loading]="busy()" (click)="saveTenant()">
+          {{ busy() ? 'Saving…' : editingTenant() ? 'Save changes' : 'Move in' }}
         </button>
         <button type="button" class="btn btn-ghost" (click)="close()">Cancel</button>
       </div>
@@ -451,10 +536,18 @@
         </button>
       </div>
 
-      <p class="notice">
-        This is what puts the money in your books. The PDF goes to
-        <strong>{{ activeOccupant()?.email }}</strong> and the dashboard updates immediately.
-      </p>
+      @if (hasEmail(activeOccupant())) {
+        <p class="notice">
+          This is what puts the money in your books. The PDF goes to
+          <strong>{{ activeOccupant()?.email }}</strong> and the dashboard updates immediately.
+        </p>
+      } @else {
+        <p class="notice">
+          {{ activeOccupant()?.name }} has no email on file, so nothing will be sent. The
+          receipt is still recorded and the PDF is downloadable from the Receipts page —
+          or add an address later and send it from there.
+        </p>
+      }
 
       <div class="grid2">
         <div class="field">
@@ -466,7 +559,7 @@
           <input id="rto" type="date" [(ngModel)]="receiptForm.toDate" />
         </div>
         <div class="field">
-          <label for="ramt">Amount (Rs.)</label>
+          <label for="ramt">Rent (Rs.)</label>
           <input id="ramt" type="number" min="0" [(ngModel)]="receiptForm.amount" />
         </div>
         <div class="field">
@@ -486,6 +579,41 @@
           <input id="rpaid" type="date" [(ngModel)]="receiptForm.paidOn" />
         </div>
         <div class="field span2">
+          @if (activeOccupant()?.depositCollected) {
+            <p class="done-note">
+              Deposit and agreement charge were collected on an earlier receipt, so
+              this one is rent only.
+            </p>
+          } @else {
+            <label class="check first-check">
+              <input type="checkbox" [ngModel]="receiptForm.includeExtras"
+                     (ngModelChange)="toggleExtras($event)" />
+              <span>
+                <b>This is the first receipt</b>
+                <em>
+                  Also collect the security deposit (refundable) and the agreement
+                  charge (non-refundable). Offered once only.
+                </em>
+              </span>
+            </label>
+          }
+        </div>
+
+        @if (receiptForm.includeExtras && !activeOccupant()?.depositCollected) {
+          <div class="field">
+            <label for="rdep">Security deposit (Rs.)</label>
+            <input id="rdep" type="number" min="0" placeholder="0"
+                   [(ngModel)]="receiptForm.deposit" />
+          </div>
+
+          <div class="field">
+            <label for="ragr">Agreement charge (Rs.)</label>
+            <input id="ragr" type="number" min="0" placeholder="0"
+                   [(ngModel)]="receiptForm.agreement" />
+          </div>
+        }
+
+        <div class="field span2">
           <label for="rnotes">Notes <span class="opt">optional</span></label>
           <input id="rnotes" type="text" placeholder="Paid 3 days late, waived"
                  [(ngModel)]="receiptForm.notes" />
@@ -496,10 +624,246 @@
         <p class="error-text" role="alert">{{ err }}</p>
       }
 
+      @if (lateFeeOn(activeOccupant()) > 0) {
+        <p class="notice fee-note">
+          A late fee of <strong>Rs {{ lateFeeOn(activeOccupant()) | number: '1.0-0' }}</strong>
+          has been added — rent was due on
+          {{ activeOccupant()?.dueDate | date: 'd MMM' }}.
+          <button type="button" class="link waive" (click)="waiveLateFee()">
+            Charge rent only
+          </button>
+        </p>
+      }
+
+      @if (hasExtras()) {
+        <div class="total-strip">
+          <div class="ts-lines">
+            <span>Rent <b>Rs {{ receiptForm.amount || 0 | number: '1.0-0' }}</b></span>
+            @if (receiptForm.deposit) {
+              <span>Deposit <b>Rs {{ receiptForm.deposit | number: '1.0-0' }}</b></span>
+            }
+            @if (receiptForm.agreement) {
+              <span>Agreement <b>Rs {{ receiptForm.agreement | number: '1.0-0' }}</b></span>
+            }
+          </div>
+          <div class="ts-total">
+            <em>Receipt total</em>
+            <strong>Rs {{ receiptTotal() | number: '1.0-0' }}</strong>
+          </div>
+          <button type="button" class="link" (click)="toggleExtras(false)">Rent only</button>
+        </div>
+      }
+
+      <label class="check" [class.off]="!hasEmail(activeOccupant())">
+        <input type="checkbox" [disabled]="!hasEmail(activeOccupant())"
+               [(ngModel)]="receiptForm.sendEmail" />
+        <span>Email the receipt to the tenant</span>
+      </label>
+
       <div class="actions">
-        <button type="button" class="btn btn-gold" [disabled]="busy()" (click)="send()">
+        <button type="button" class="btn btn-gold" [disabled]="busy()" [class.is-loading]="busy()" (click)="send()">
           <th-icon name="mail" />
-          {{ busy() ? 'Sending…' : 'Generate PDF and email it' }}
+          {{ busy()
+              ? 'Working…'
+              : (receiptForm.sendEmail && hasEmail(activeOccupant()))
+                  ? 'Generate PDF and email it'
+                  : 'Record receipt' }}
+        </button>
+        <button type="button" class="btn btn-ghost" (click)="close()">Cancel</button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- ─────────── Tenant profile, read only ─────────── -->
+@if (sheet() === 'profile') {
+  <div class="backdrop" (click)="close()">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <div class="modal-head">
+        <div>
+          <h3>{{ activeOccupant()?.name }}</h3>
+          <p>{{ activeFlat()?.flatNo }} &middot; {{ activeOccupant()?.roomName }}</p>
+        </div>
+        <button type="button" class="x" aria-label="Close" (click)="close()">&times;</button>
+      </div>
+
+      @if (activeOccupant(); as o) {
+        @if (o.onNotice) {
+          <p class="notice">
+            <b>On notice.</b> Given {{ o.noticeGivenOn | date: 'd MMM yyyy' }}, leaves
+            {{ o.noticeEndsOn | date: 'd MMM yyyy' }}.
+            @if (noticeDaysLeft(o) !== null) {
+              @if (noticeDaysLeft(o)! >= 0) {
+                {{ noticeDaysLeft(o) }} days to go.
+              } @else {
+                Notice ran out {{ -noticeDaysLeft(o)! }} days ago.
+              }
+            }
+          </p>
+        }
+
+        <dl class="profile">
+          <div><dt>Phone</dt><dd>{{ o.phone || 'Not on file' }}</dd></div>
+          <div><dt>Email</dt><dd>{{ o.email || 'Not on file' }}</dd></div>
+          <div><dt>Moved in</dt><dd>{{ (o.joinDate | date: 'd MMM yyyy') || '—' }}</dd></div>
+          <div><dt>Monthly rent</dt><dd>Rs {{ o.monthlyRent | number: '1.0-0' }}</dd></div>
+          <div>
+            <dt>Security deposit</dt>
+            <dd>
+              Rs {{ o.securityDeposit || 0 | number: '1.0-0' }}
+              <em>{{ o.depositCollected ? 'collected' : 'not collected yet' }}</em>
+            </dd>
+          </div>
+          <div>
+            <dt>Agreement charge</dt>
+            <dd>Rs {{ o.agreementChargeDue || 0 | number: '1.0-0' }} <em>non-refundable</em></dd>
+          </div>
+          <div><dt>Rent due on</dt><dd>{{ o.dueDate | date: 'd MMM' }} each month</dd></div>
+          <div>
+            <dt>This period</dt>
+            <dd>{{ o.periodFrom | date: 'd MMM' }} &ndash; {{ o.periodTo | date: 'd MMM' }}</dd>
+          </div>
+          <div>
+            <dt>This period's rent</dt>
+            <dd>
+              {{ o.paidThisMonth ? 'Paid · ' + o.receiptNoThisMonth : 'Not yet paid' }}
+              @if (!o.paidThisMonth && (o.lateFee || 0) > 0) {
+                <em>late fee Rs {{ o.lateFee | number: '1.0-0' }}</em>
+              }
+            </dd>
+          </div>
+          <div>
+            <dt>Welcome email</dt>
+            <dd>{{ o.welcomeSentAt ? (o.welcomeSentAt | date: 'd MMM yyyy') : 'Not sent' }}</dd>
+          </div>
+          <div>
+            <dt>Last reminder</dt>
+            <dd>{{ o.lastReminderAt ? (o.lastReminderAt | date: 'd MMM, h:mm a') : 'None' }}</dd>
+          </div>
+        </dl>
+
+        <div class="rcpt-head">
+          <span>Receipts</span>
+          @if (profileReceipts().length > 0) {
+            <span class="rcpt-sum">
+              {{ profileReceipts().length }} in all &middot;
+              Rs {{ profilePaidTotal() | number: '1.0-0' }} received
+            </span>
+          }
+        </div>
+
+        @if (profileLoading()) {
+          <p class="muted small">Loading their receipts…</p>
+        } @else if (profileReceipts().length === 0) {
+          <p class="muted small">No receipts yet.</p>
+        } @else {
+          <ul class="rcpt-list">
+            @for (r of profileReceipts(); track r.id) {
+              <li>
+                <span class="rc-no">{{ r.receiptNo }}</span>
+                <span class="rc-period">
+                  {{ r.fromDate | date: 'd MMM' }} &ndash; {{ r.toDate | date: 'd MMM yy' }}
+                </span>
+                <span class="rc-amt">Rs {{ r.amount | number: '1.0-0' }}</span>
+                @if (r.depositAmount || r.agreementCharge) {
+                  <span class="rc-tag">incl. deposit</span>
+                }
+                <button type="button" class="link"
+                        [disabled]="pending() !== null"
+                        [class.is-loading]="pending() === 'pdf:' + r.id"
+                        title="Download this receipt"
+                        (click)="downloadFromProfile(r)">
+                  <th-icon name="download" />
+                </button>
+              </li>
+            }
+          </ul>
+        }
+      }
+
+      <div class="actions">
+        <button type="button" class="btn btn-ghost" (click)="close()">Close</button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- ─────────── Move out and settle ─────────── -->
+@if (sheet() === 'vacate') {
+  <div class="backdrop" (click)="close()">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <div class="modal-head">
+        <div>
+          <h3>Move out &amp; settle</h3>
+          <p>{{ activeOccupant()?.name }} &middot; {{ activeFlat()?.flatNo }}</p>
+        </div>
+        <button type="button" class="x" aria-label="Close" (click)="close()">&times;</button>
+      </div>
+
+      <p class="notice">
+        Their record is removed and the bed frees up. Receipts already raised stay on
+        file. What is refunded is up to you — the deposit held is shown below.
+      </p>
+
+      <div class="grid2">
+        <div class="field">
+          <label for="vdate">Moving out on</label>
+          <input id="vdate" type="date" [(ngModel)]="vacateForm.exitDate" />
+        </div>
+
+        <div class="field">
+          <label for="vheld">Deposit held (Rs.)</label>
+          <input id="vheld" type="number" [ngModel]="vacateForm.deposit" disabled />
+        </div>
+
+        <div class="field">
+          <label for="vded">Deductions (Rs.) <span class="opt">optional</span></label>
+          <input id="vded" type="number" min="0" placeholder="0"
+                 [(ngModel)]="vacateForm.deductions"
+                 (ngModelChange)="onDeductionsChanged()" />
+        </div>
+
+        <div class="field">
+          <label for="vref">Refunding (Rs.)</label>
+          <input id="vref" type="number" min="0" [(ngModel)]="vacateForm.refund" />
+        </div>
+
+        @if ((vacateForm.deductions || 0) > 0) {
+          <div class="field span2">
+            <label for="vwhy">What was deducted, and why</label>
+            <input id="vwhy" type="text" placeholder="Lost keys, and the hall chair"
+                   [(ngModel)]="vacateForm.deductionNotes" />
+          </div>
+        }
+      </div>
+
+      <div class="total-strip">
+        <div class="ts-lines">
+          <span>Deposit <b>Rs {{ vacateForm.deposit | number: '1.0-0' }}</b></span>
+          @if (vacateForm.deductions) {
+            <span>Less <b>Rs {{ vacateForm.deductions | number: '1.0-0' }}</b></span>
+          }
+        </div>
+        <div class="ts-total">
+          <em>Refund</em>
+          <strong>Rs {{ vacateForm.refund | number: '1.0-0' }}</strong>
+        </div>
+      </div>
+
+      <label class="check" [class.off]="!hasEmail(activeOccupant())">
+        <input type="checkbox" [disabled]="!hasEmail(activeOccupant())"
+               [(ngModel)]="vacateForm.sendEmail" />
+        <span>Email the settlement note with the refund amount</span>
+      </label>
+
+      @if (sheetError(); as err) {
+        <p class="error-text" role="alert">{{ err }}</p>
+      }
+
+      <div class="actions">
+        <button type="button" class="btn btn-primary" [disabled]="busy()"
+                [class.is-loading]="busy()" (click)="confirmVacate()">
+          Move out &amp; settle
         </button>
         <button type="button" class="btn btn-ghost" (click)="close()">Cancel</button>
       </div>

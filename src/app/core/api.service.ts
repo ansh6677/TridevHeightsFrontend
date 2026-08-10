@@ -3,7 +3,8 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import { environment } from '../../environments/environment';
 import {
-  DashboardSummary, DeskUser, Expense, Flat, FlatCard, Receipt, ReminderResult
+  DashboardSummary, DeskUser, Expense, Flat, FlatCard, PartnerDashboard, Receipt,
+  ReminderResult
 } from './models';
 
 @Injectable({ providedIn: 'root' })
@@ -41,12 +42,29 @@ export class ApiService {
     return firstValueFrom(this.http.put(`${this.base}/tenants/${id}`, body));
   }
 
-  vacateTenant(id: string, exitDate: string): Promise<unknown> {
-    return firstValueFrom(this.http.post(`${this.base}/tenants/${id}/vacate`, { exitDate }));
+  /** Send (or resend) the welcome email to a tenant who has an address. */
+  sendWelcomeEmail(id: string): Promise<{ message: string }> {
+    return firstValueFrom(
+      this.http.post<{ message: string }>(`${this.base}/tenants/${id}/welcome-email`, {})
+    );
   }
 
-  reactivateTenant(id: string): Promise<unknown> {
-    return firstValueFrom(this.http.post(`${this.base}/tenants/${id}/reactivate`, {}));
+  /** Puts a tenant on notice. They stay in place until they actually leave. */
+  startNotice(id: string, body: Record<string, unknown>): Promise<unknown> {
+    return firstValueFrom(this.http.post(`${this.base}/tenants/${id}/notice`, body));
+  }
+
+  cancelNotice(id: string): Promise<unknown> {
+    return firstValueFrom(this.http.delete(`${this.base}/tenants/${id}/notice`));
+  }
+
+  /** Settles the deposit, emails the note, and removes the tenant. */
+  settleAndVacate(id: string, body: Record<string, unknown>): Promise<unknown> {
+    return firstValueFrom(this.http.post(`${this.base}/tenants/${id}/vacate`, body));
+  }
+
+  vacateTenant(id: string, exitDate: string): Promise<unknown> {
+    return firstValueFrom(this.http.post(`${this.base}/tenants/${id}/vacate`, { exitDate }));
   }
 
   deleteTenant(id: string): Promise<void> {
@@ -54,6 +72,12 @@ export class ApiService {
   }
 
   // ---- Receipts ----
+  /** Every receipt raised for one tenant, newest first. */
+  receiptsFor(tenantId: string): Promise<Receipt[]> {
+    const params = new HttpParams().set('tenantId', tenantId);
+    return firstValueFrom(this.http.get<Receipt[]>(`${this.base}/payments`, { params }));
+  }
+
   receipts(month?: string): Promise<Receipt[]> {
     let params = new HttpParams();
     if (month) {
@@ -108,6 +132,17 @@ export class ApiService {
 
   deleteExpense(id: string): Promise<void> {
     return firstValueFrom(this.http.delete<void>(`${this.base}/expenses/${id}`));
+  }
+
+  /** The partners' personal spending, which the PG dashboard excludes. */
+  partnerExpenses(month?: string, months = 6): Promise<PartnerDashboard> {
+    let params = new HttpParams().set('months', months);
+    if (month) {
+      params = params.set('month', month);
+    }
+    return firstValueFrom(
+      this.http.get<PartnerDashboard>(`${this.base}/expenses/partners`, { params })
+    );
   }
 
   // ---- Rent reminders ----

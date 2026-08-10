@@ -1,0 +1,161 @@
+@if (toast(); as t) {
+  <div class="toast" [class.bad]="t.bad" role="status" title="Tap to dismiss"
+       (click)="toast.set(null)">{{ t.text }}</div>
+}
+<div class="page">
+
+  <div class="page-head">
+    <div>
+      <h1>Partner spending</h1>
+      <p class="page-sub">
+        What Anshul, Atul and Prashant have spent personally. None of this touches
+        the PG's own figures.
+      </p>
+    </div>
+
+    <div class="head-tools">
+      <input class="month-pick" type="month" aria-label="Month to show"
+             [ngModel]="month()" (ngModelChange)="setMonth($event)" />
+      <button type="button" class="btn btn-ghost btn-sm"
+              [disabled]="!data() || data()!.entries.length === 0" (click)="exportCsv()">
+        <th-icon name="download" />
+        Download CSV
+      </button>
+    </div>
+  </div>
+
+  @if (loading()) {
+    <div class="card pane"><p class="muted">Loading…</p></div>
+  }
+
+  @if (!loading() && data(); as d) {
+
+    @if (!d.isCurrentMonth) {
+      <div class="looking-back" role="status">
+        <span class="lb-dot"></span>
+        Showing <strong>{{ d.monthLabel }}</strong>, not the current month.
+      </div>
+    }
+
+    <!-- One card per partner -->
+    <section class="grid people">
+      @for (p of d.partners; track p.name) {
+        <div class="card person">
+          <div class="p-top">
+            <span class="p-initial">{{ p.name.charAt(0) }}</span>
+            <div class="p-who">
+              <strong>{{ p.name }}</strong>
+              <span class="muted small">
+                {{ p.entriesThisMonth }}
+                {{ p.entriesThisMonth === 1 ? 'entry' : 'entries' }} this month
+              </span>
+            </div>
+          </div>
+
+          <span class="p-amount">Rs. {{ p.thisMonth | number: '1.0-0' }}</span>
+
+          <div class="track">
+            <div class="fill" [style.width.%]="p.sharePercent"></div>
+          </div>
+          <span class="muted small">
+            {{ p.sharePercent }}% of the month &middot;
+            Rs. {{ p.allTime | number: '1.0-0' }} all time
+          </span>
+        </div>
+      }
+    </section>
+
+    <!-- Totals -->
+    <section class="grid">
+      <div class="card kpi small-kpi tone-navy">
+        <span class="kpi-label">Spent {{ d.monthLabel }}</span>
+        <span class="kpi-value">Rs. {{ d.spentThisMonth | number: '1.0-0' }}</span>
+        <span class="kpi-foot">
+          {{ d.entriesThisMonth }}
+          {{ d.entriesThisMonth === 1 ? 'entry' : 'entries' }}
+        </span>
+      </div>
+      <div class="card kpi small-kpi tone-gold">
+        <span class="kpi-label">Spent all time</span>
+        <span class="kpi-value">Rs. {{ d.spentAllTime | number: '1.0-0' }}</span>
+        <span class="kpi-foot">across all three</span>
+      </div>
+    </section>
+
+    <!-- Trend -->
+    <section class="card pane">
+      <div class="pane-head">
+        <h2>Month by month</h2>
+        <div class="spans" role="group" aria-label="How far back to look">
+          @for (n of [3, 6, 12]; track n) {
+            <button type="button" [class.on]="span() === n" (click)="setSpan(n)">{{ n }}m</button>
+          }
+        </div>
+      </div>
+
+      <div class="bars">
+        @for (m of d.months; track m.month) {
+          <div class="bar-col" [title]="m.label + ' · Rs. ' + m.amount">
+            <div class="bar" [style.height.%]="barHeight(m.amount)"></div>
+            <span class="bar-lbl">{{ m.label }}</span>
+          </div>
+        }
+      </div>
+    </section>
+
+    <!-- Every entry for the month -->
+    <section class="card pane">
+      <div class="pane-head">
+        <h2>{{ d.monthLabel }}</h2>
+        <span class="muted small">{{ d.entriesThisMonth }} in all</span>
+      </div>
+
+      @if (d.entries.length === 0) {
+        <div class="empty">
+          <p>Nothing spent personally this month.</p>
+          <p class="empty-sub">
+            Entries logged against Anshul, Atul or Prashant on the Expenses screen
+            show up here.
+          </p>
+        </div>
+      } @else {
+        <div class="table-wrap stacked">
+          <table>
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Remark</th>
+                <th>Paid by</th>
+                <th class="num">Amount</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (e of d.entries; track e.id) {
+                <tr>
+                  <td data-label="Date" class="muted nowrap">
+                    {{ e.expenseDate | date: 'dd MMM yy' }}
+                  </td>
+                  <td data-label="Remark" class="strong">{{ e.remark }}</td>
+                  <td data-label="Paid by">
+                    <span class="pill pill-payer">{{ e.paidBy }}</span>
+                  </td>
+                  <td data-label="Amount" class="num strong">
+                    Rs. {{ e.amount | number: '1.0-0' }}
+                  </td>
+                </tr>
+              }
+            </tbody>
+            <tfoot>
+              <tr>
+                <td data-label="" colspan="3" class="strong">Total</td>
+                <td data-label="Total" class="num strong">
+                  Rs. {{ d.spentThisMonth | number: '1.0-0' }}
+                </td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      }
+    </section>
+  }
+</div>

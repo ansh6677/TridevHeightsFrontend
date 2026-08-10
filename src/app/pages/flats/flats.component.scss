@@ -46,7 +46,7 @@
 // gains a tenant.
 .cards {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(380px, 100%), 1fr));
   grid-auto-rows: 1fr;
   gap: 18px;
   align-items: stretch;
@@ -361,17 +361,22 @@
   display: flex;
   flex-direction: column;
   gap: 11px;
-  border: 1px solid $navy-tint-2;
+  border: 1px solid #b9d2ee;
   border-left: 3px solid $navy-bright;
   border-radius: $radius-sm;
   padding: 12px;
-  background: linear-gradient(180deg, $navy-tint 0%, rgba(234, 241, 250, 0.25) 100%);
+  /*
+   * Deep enough to read as a band. The old gradient faded to near-white by
+   * a third of the way down, so on a phone the group looked like a hairline
+   * around nothing and the bed cards inside it had no ground to sit on.
+   */
+  background: linear-gradient(180deg, #cfe0f5 0%, #e2edfa 100%);
 }
 
 .group-hall {
-  border-color: $hall-line;
+  border-color: #cbb4f4;
   border-left-color: $hall;
-  background: linear-gradient(180deg, $hall-tint 0%, rgba(242, 236, 253, 0.25) 100%);
+  background: linear-gradient(180deg, #e0d1fb 0%, #eee5ff 100%);
 }
 
 // Grid, not wrap: the tag and the count belong on the same line whatever
@@ -521,7 +526,7 @@
 
 .slots {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(168px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(168px, 100%), 1fr));
   gap: 8px;
 }
 
@@ -540,8 +545,16 @@
 // A filled bed is white with a coloured spine: green once the receipt
 // has gone out, red while the rent is still owed.
 .slot.taken {
-  background: $surface;
-  border: 1px solid $line;
+  /*
+   * Tinted in its own room's colour rather than left white. A column of
+   * white cards inside a coloured band reads as a list that has nothing to
+   * do with the band around it; a wash of the same hue ties the bed to the
+   * room it belongs to, and two rooms side by side stay tellable apart.
+   */
+  background: linear-gradient(150deg,
+      color-mix(in srgb, var(--tone-tint) 78%, #fff) 0%,
+      #fff 72%);
+  border: 1px solid color-mix(in srgb, var(--tone) 26%, #fff);
 
   &::before {
     content: '';
@@ -552,6 +565,7 @@
 
   &.paid {
     border-color: $occupied-line;
+    background: linear-gradient(150deg, $occupied-tint 0%, #fff 68%);
 
     &::before {
       background: $occupied;
@@ -618,11 +632,14 @@
 // width the tenant's name needed.
 .slot-links {
   display: flex;
-  gap: 0;
+  // These used to be bare icons, where sitting flush read as one group.
+  // Now that each has its own box they need air, or the three boxes look
+  // like a single segmented control and it is unclear where a tap lands.
+  gap: 7px;
   margin-left: auto;
 
   .link {
-    padding: 5px 6px;
+    padding: 6px 9px;
     color: $muted;
 
     .ic {
@@ -1111,4 +1128,400 @@
   .icon-btn {
     height: 44px;
   }
+}
+
+// A tenant with no address should look deliberate, not like missing data
+.no-mail {
+  color: $muted;
+  font-style: italic;
+  opacity: 0.8;
+}
+
+.check {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  font-size: 14px;
+  line-height: 1.5;
+  cursor: pointer;
+
+  input {
+    width: auto;
+    margin-top: 2px;
+  }
+
+  em {
+    font-style: normal;
+    color: $muted;
+  }
+
+  &.off {
+    cursor: default;
+    color: $muted;
+  }
+}
+
+// The late fee is folded into the amount, so say so plainly and give a
+// one-click way out — waiving it is a normal thing to do, not an exception.
+.fee-note {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.waive {
+  margin-left: auto;
+}
+
+// Two fields side by side must line their inputs up even when one label
+// wraps and the other does not. Without a floor on the label height the
+// taller label pushes its own input down and the row looks broken.
+.grid2 .field {
+  align-content: start;
+}
+
+.grid2 .field > label {
+  min-height: 18px;
+  display: block;
+}
+
+// Three numbers going onto one receipt need adding up in front of the person,
+// not in their head. The total is what the tenant will be handed, so it is
+// the loudest thing here.
+.total-strip {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 16px;
+  padding: 12px 15px;
+  border-radius: $radius-sm;
+  background: linear-gradient(135deg, $navy-tint 0%, $surface 70%);
+  border: 1px solid $navy-tint-2;
+}
+
+.ts-lines {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  font-size: 12.5px;
+  color: $muted;
+
+  b {
+    color: $ink;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+.ts-total {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-left: auto;
+
+  em {
+    font-style: normal;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: $muted;
+  }
+
+  strong {
+    font-family: $font-heading;
+    font-size: 17px;
+    color: $navy;
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+// The one-time charges are a decision, so they get a labelled tick rather
+// than fields that quietly appear and disappear.
+//
+// Sitting inside .field, this would otherwise pick up the small-caps
+// letter-spaced styling meant for field labels and read as a heading
+// rather than as something you tick.
+.field > .first-check,
+.first-check {
+  align-items: flex-start;
+  font-size: 14px;
+  font-weight: 400;
+  letter-spacing: 0;
+  text-transform: none;
+  color: $ink;
+
+  span {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  b {
+    font-weight: 600;
+    letter-spacing: 0;
+    text-transform: none;
+  }
+
+  em {
+    font-style: normal;
+    font-size: 12.5px;
+    font-weight: 400;
+    letter-spacing: 0;
+    text-transform: none;
+    color: $muted;
+    line-height: 1.5;
+  }
+}
+
+.done-note {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.55;
+  color: $muted;
+  background: rgba(13, 19, 33, 0.04);
+  border-radius: $radius-sm;
+  padding: 10px 13px;
+}
+
+// ---------------------------------------------------------------
+//  Boys and girls flats
+//
+//  A colour on the whole card, not a small badge. The point is to spot
+//  from across the room that a vacancy is in the wrong one — a label you
+//  have to read does not do that.
+// ---------------------------------------------------------------
+$boys: #2563eb;
+$girls: #db2777;
+
+.gender-pick {
+  display: flex;
+  gap: 9px;
+}
+
+.gp {
+  flex: 1;
+  padding: 11px 14px;
+  border-radius: $radius-sm;
+  border: 1.5px solid $line-2;
+  background: $surface;
+  font-family: $font-body;
+  font-size: 14px;
+  font-weight: 600;
+  color: $muted;
+  cursor: pointer;
+  transition: all $speed $ease;
+}
+
+.gp-boys.on {
+  border-color: $boys;
+  background: rgba(37, 99, 235, 0.1);
+  color: $boys;
+}
+
+.gp-girls.on {
+  border-color: $girls;
+  background: rgba(219, 39, 119, 0.1);
+  color: $girls;
+}
+
+.gender-tag {
+  align-self: flex-start;
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  border-radius: 999px;
+  padding: 2px 9px;
+  margin-bottom: 3px;
+}
+
+.flat.for-boys {
+  border-color: rgba(37, 99, 235, 0.32);
+
+  // The tag sits on the coloured header, so it has to be light on dark.
+  // Tinting it in the same hue made it disappear into the band behind it.
+  .gender-tag {
+    background: rgba(255, 255, 255, 0.22);
+    color: #fff;
+  }
+
+  .flat-head {
+    background: linear-gradient(135deg, #1d4ed8 0%, #3b82f6 100%);
+  }
+}
+
+.flat.for-girls {
+  border-color: rgba(219, 39, 119, 0.32);
+
+  .gender-tag {
+    background: rgba(255, 255, 255, 0.22);
+    color: #fff;
+  }
+
+  .flat-head {
+    background: linear-gradient(135deg, #be185d 0%, #ec4899 100%);
+  }
+}
+
+// A tenant working their notice needs to stand out on the board
+.slot.taken.on-notice {
+  border-style: dashed;
+  border-color: rgba(232, 166, 61, 0.7);
+}
+
+.notice-tag {
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #8a6410;
+  background: $gold-tint;
+  border-radius: 999px;
+  padding: 2px 9px;
+}
+
+// Read-only profile: a definition list rather than disabled inputs, because
+// nothing here is editable and boxes invite people to try.
+.profile {
+  margin: 0;
+  display: grid;
+  gap: 1px;
+  background: $line;
+  border: 1px solid $line;
+  border-radius: $radius-sm;
+  overflow: hidden;
+
+  /*
+   * The modal is a flex column with a height cap, so without this the list
+   * is squeezed to fit and clips its own last row mid-line — with overflow
+   * hidden there is not even a scrollbar to hint at what is missing. Keeping
+   * its natural height pushes the scrolling up to the modal, where it
+   * belongs.
+   */
+  flex: none;
+
+  > div {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 14px;
+    background: $surface;
+    padding: 10px 14px;
+  }
+
+  dt {
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    color: $muted;
+    flex: none;
+  }
+
+  dd {
+    margin: 0;
+    font-size: 13.5px;
+    font-weight: 600;
+    color: $ink;
+    text-align: right;
+    min-width: 0;
+    word-break: break-word;
+  }
+
+  em {
+    display: block;
+    font-style: normal;
+    font-size: 11.5px;
+    font-weight: 500;
+    color: $muted;
+  }
+}
+
+// The name is the way into the profile — it should look pressable without
+// turning the card into a wall of buttons.
+.who-link {
+  border: none;
+  background: none;
+  // Padded to a real tap target. The text is only 25px tall on a phone, and
+  // this is now the way into the profile, so it has to be hittable first go.
+  padding: 4px 0;
+  min-height: 32px;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  border-bottom: 1px dashed rgba(13, 19, 33, 0.22);
+
+  &:hover {
+    color: $navy-bright;
+    border-bottom-color: $navy-bright;
+  }
+}
+
+.rcpt-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  padding-top: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: $navy;
+}
+
+.rcpt-sum {
+  letter-spacing: 0;
+  text-transform: none;
+  font-size: 12px;
+  font-weight: 500;
+  color: $muted;
+}
+
+.rcpt-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+
+  li {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 12px;
+    border-radius: $radius-sm;
+    background: $surface-2;
+    border: 1px solid $line;
+    font-size: 13px;
+  }
+}
+
+.rc-no {
+  font-weight: 600;
+  color: $navy;
+}
+
+.rc-period {
+  color: $muted;
+}
+
+.rc-amt {
+  margin-left: auto;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.rc-tag {
+  font-size: 10.5px;
+  font-weight: 600;
+  color: #8a6410;
+  background: $gold-tint;
+  border-radius: 999px;
+  padding: 2px 8px;
 }

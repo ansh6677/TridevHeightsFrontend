@@ -1,7 +1,8 @@
-<div class="page">
   @if (toast(); as t) {
-    <div class="toast" [class.bad]="t.bad" role="status">{{ t.text }}</div>
-  }
+  <div class="toast" [class.bad]="t.bad" role="status" title="Tap to dismiss"
+     (click)="toast.set(null)">{{ t.text }}</div>
+}
+<div class="page">
 
   <div class="page-head">
     <div>
@@ -67,7 +68,7 @@
           <input id="dt" type="date" [(ngModel)]="form.expenseDate" />
         </div>
 
-        <button type="button" class="btn btn-primary" [disabled]="busy()" (click)="add()">
+        <button type="button" class="btn btn-primary" [disabled]="busy()" [class.is-loading]="busy()" (click)="add()">
           <th-icon name="plus" />
           {{ busy() ? 'Adding…' : 'Add' }}
         </button>
@@ -169,6 +170,8 @@
                 <td class="row-actions">
                   @if (auth.isAdmin()) {
                     <button type="button" class="link danger" title="Delete this entry"
+                            [disabled]="pending() !== null"
+                            [class.is-loading]="pending() === 'delete:' + e.id"
                             (click)="remove(e)">
                       <th-icon name="trash" />
                       Delete

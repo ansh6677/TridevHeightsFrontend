@@ -1,0 +1,219 @@
+@use '../../../styles/page' as *;
+@use '../../../styles/variables' as *;
+
+.head-tools {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.month-pick {
+  width: auto;
+  min-width: 165px;
+  padding-block: 8px;
+}
+
+// ---------------------------------------------------------------
+//  One card per partner
+// ---------------------------------------------------------------
+.people {
+  grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr));
+}
+
+.person {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  padding: 18px;
+}
+
+.p-top {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+}
+
+.p-initial {
+  flex: none;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-family: $font-heading;
+  font-size: 17px;
+  font-weight: 600;
+  color: #fff;
+  background: $grad-primary;
+}
+
+.p-who {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+
+  strong {
+    font-size: 15px;
+  }
+}
+
+.p-amount {
+  font-family: $font-heading;
+  font-size: 26px;
+  font-weight: 600;
+  color: $ink;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+}
+
+.track {
+  height: 6px;
+  background: rgba(13, 19, 33, 0.08);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.fill {
+  height: 100%;
+  border-radius: 999px;
+  background: $grad-primary;
+  transition: width 0.5s $ease;
+}
+
+// ---------------------------------------------------------------
+//  Totals
+//
+//  The .kpi styling lives inside the dashboard component and is scoped to
+//  it, so the same class names do nothing here — the label, figure and note
+//  all ran together on one line. Defined locally rather than lifted into the
+//  shared sheet, which would risk shifting the dashboard's own cards.
+// ---------------------------------------------------------------
+.kpi {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 16px 18px;
+}
+
+.kpi-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: $muted;
+}
+
+.kpi-value {
+  font-family: $font-heading;
+  font-size: 24px;
+  font-weight: 600;
+  color: $ink;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.15;
+}
+
+.kpi-foot {
+  font-size: 12px;
+  color: $muted;
+}
+
+.tone-navy {
+  border-color: $navy-tint-2;
+  background: linear-gradient(135deg, $navy-tint 0%, $surface 62%);
+}
+
+.tone-gold {
+  border-color: rgba(232, 166, 61, 0.35);
+  background: linear-gradient(135deg, $gold-tint 0%, $surface 62%);
+}
+
+// ---------------------------------------------------------------
+//  Trend
+// ---------------------------------------------------------------
+.bars {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(34px, 1fr);
+  align-items: end;
+  gap: 10px;
+  height: 170px;
+  padding-top: 6px;
+}
+
+.bar-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 7px;
+  height: 100%;
+  min-width: 0;
+}
+
+.bar {
+  width: 100%;
+  max-width: 46px;
+  // A month with nothing spent still needs to be visible as a month
+  min-height: 3px;
+  border-radius: 6px 6px 3px 3px;
+  background: $grad-primary;
+}
+
+.bar-lbl {
+  font-size: 10.5px;
+  color: $muted;
+  white-space: nowrap;
+}
+
+.pill-payer {
+  background: $gold-tint;
+  color: #8a6410;
+}
+
+.looking-back {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: $gold-tint;
+  border: 1px solid rgba(232, 166, 61, 0.35);
+  border-radius: $radius-sm;
+  padding: 12px 16px;
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: #6b4a08;
+}
+
+.lb-dot {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: $gold;
+}
+
+tfoot td {
+  padding: 12px;
+  border-top: 1px solid $line;
+  background: $bg;
+}
+
+@media (max-width: 700px) {
+  .bars {
+    height: 140px;
+    gap: 6px;
+  }
+
+  .bar-lbl {
+    font-size: 9.5px;
+  }
+}
+
+// The span switcher is styled globally, but its tap height is set on the
+// dashboard's own copy — without repeating it here these come out at 21px,
+// which is a target you aim at rather than tap.
+.spans button {
+  min-height: 34px;
+  padding-inline: 12px;
+}

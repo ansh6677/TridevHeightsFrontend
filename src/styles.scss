@@ -222,11 +222,33 @@ textarea {
 // The native arrow is a different shape in every browser; this is one shape
 // everywhere, drawn in the brand's ink.
 select {
+  /*
+   * All three prefixes: without the WebKit and Moz ones some builds still
+   * paint the native arrow, and you end up with two chevrons at different
+   * heights. background-size is stated explicitly for the same reason —
+   * left to itself the SVG scales to the box and drifts off centre.
+   */
   appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
   padding-right: 38px;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
-  background-position: right 12px center;
+  background-position: right 13px center;
+  background-size: 15px 15px;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+}
+
+/* Firefox keeps a focus ring inside the control that shifts the text */
+select:-moz-focusring {
+  color: transparent;
+  text-shadow: 0 0 0 $ink;
+}
+
+/* IE/Edge legacy arrow */
+select::-ms-expand {
+  display: none;
 }
 
 input[type='checkbox'] {
@@ -317,6 +339,45 @@ input[type='search'] {
   &:focus-visible {
     outline: none;
     box-shadow: $ring;
+  }
+
+  /*
+   * While a click is in flight the label stays put and a spinner sits over
+   * it. Swapping the text for "Working…" instead makes the button change
+   * width mid-press, which moves whatever is next to it.
+   */
+  &.is-loading {
+    color: transparent !important;
+    pointer-events: none;
+
+    .ic,
+    th-icon {
+      visibility: hidden;
+    }
+
+    &::after {
+      content: '';
+      position: absolute;
+      width: 16px;
+      height: 16px;
+      border: 2px solid currentColor;
+      border-color: rgba(255, 255, 255, 0.35);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.62s linear infinite;
+    }
+  }
+
+  &.btn-ghost.is-loading::after,
+  &.btn-gold.is-loading::after {
+    border-color: rgba(11, 18, 32, 0.25);
+    border-top-color: rgba(11, 18, 32, 0.75);
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
   }
 }
 
@@ -479,7 +540,21 @@ input[type='search'] {
 }
 
 .page {
-  animation: lift-in 0.34s $ease both;
+  /*
+   * `backwards`, never `both`.
+   *
+   * `both` holds the animation's end state on the element forever, and that
+   * end state includes a transform. An element with any transform — even
+   * translateY(0) — becomes the containing block for its position:fixed
+   * descendants, so the toast inside .page was being positioned against the
+   * whole scrollable page instead of the viewport and landed thousands of
+   * pixels off screen.
+   *
+   * `backwards` applies the from-state before the animation runs and lets
+   * the transform go back to `none` once it has finished, which keeps the
+   * arrival motion and gives fixed children the viewport back.
+   */
+  animation: lift-in 0.34s $ease backwards;
 }
 
 @keyframes shimmer {

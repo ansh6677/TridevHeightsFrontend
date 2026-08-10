@@ -117,7 +117,14 @@
 }
 
 .pane {
-  padding: 20px;
+  /*
+   * The header band pulls itself out to the card's edges with a negative
+   * margin, so the two have to agree exactly. Holding the figure in one
+   * custom property means a narrower card can never leave the band hanging
+   * past it — which is what pushed the page sideways at 320px.
+   */
+  --pane-pad: 20px;
+  padding: var(--pane-pad);
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -133,10 +140,11 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  gap: 10px 12px;
   flex-wrap: wrap;
-  margin: -20px -20px 0;
-  padding: 15px 20px 14px;
+  min-width: 0;
+  margin: calc(var(--pane-pad, 20px) * -1) calc(var(--pane-pad, 20px) * -1) 0;
+  padding: 15px var(--pane-pad, 20px) 14px;
   border-bottom: 1px solid $line;
   border-radius: $radius $radius 0 0;
   background: linear-gradient(135deg, $navy-tint 0%, rgba(234, 241, 250, 0) 84%);
@@ -202,7 +210,15 @@
 
 .grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  /*
+   * min(210px, 100%), never a bare 210px.
+   *
+   * A bare minimum makes the column wider than the screen once the viewport
+   * drops below it — the track keeps its 210px, the card overflows, and the
+   * whole page scrolls sideways on a 320px phone. Wrapping it in min() lets
+   * the track collapse to whatever room there actually is.
+   */
+  grid-template-columns: repeat(auto-fit, minmax(min(210px, 100%), 1fr));
   gap: 14px;
 }
 
@@ -224,23 +240,86 @@
 }
 
 .toast {
-  position: sticky;
-  top: 14px;
-  z-index: 30;
-  align-self: center;
-  display: inline-flex;
-  align-items: center;
+  /*
+   * Fixed, not sticky. Sticky only holds while its own container is on
+   * screen, so scrolling a long page carried the message away with it —
+   * which is exactly when you most want to still be able to read it.
+   */
+  position: fixed;
+  top: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 60;
+  max-width: min(92vw, 560px);
+
+  /*
+   * The toast must swallow the taps that land on it.
+   *
+   * With pointer-events:none a tap went straight through to whatever button
+   * happened to be underneath — and since this sits over the flat cards on a
+   * phone, tapping "Remind" a few times in the same spot could land on
+   * "Vacate" without the person ever seeing it. Absorbing the tap, and
+   * closing on it, means the worst case is a message dismissed early.
+   */
+  pointer-events: auto;
+  cursor: pointer;
+  display: flex;
+  align-items: flex-start;
   gap: 9px;
   background: rgba(11, 18, 32, 0.94);
   backdrop-filter: blur(8px);
   color: #fff;
   font-size: 14px;
   font-weight: 500;
-  padding: 12px 20px;
-  border-radius: $radius-pill;
+  padding: 12px 18px;
+  /*
+   * A pill radius on a box that is one line tall looks right; on a box that
+   * wraps to three it turns the message into a lozenge with the words
+   * crushed into the middle. A plain rounded rectangle holds any length.
+   */
+  border-radius: 14px;
+  text-align: left;
+  line-height: 1.45;
   box-shadow: $shadow-md;
   border-left: 3px solid $gold;
   animation: drop 0.32s $ease both;
+}
+
+@keyframes drop {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -12px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
+
+/*
+ * On a phone the sticky header owns the top of the screen, so a message
+ * pinned there lands on top of it. Anchoring to the bottom instead removes
+ * the collision entirely rather than trying to guess the header's height,
+ * which changes as soon as its contents wrap.
+ */
+@media (max-width: 900px) {
+  .toast {
+    top: auto;
+    bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+    max-width: calc(100vw - 24px);
+    animation: rise-toast 0.28s $ease both;
+  }
+
+  @keyframes rise-toast {
+    from {
+      opacity: 0;
+      transform: translate(-50%, 14px);
+    }
+    to {
+      opacity: 1;
+      transform: translate(-50%, 0);
+    }
+  }
 }
 
 .toast.bad {
@@ -471,6 +550,90 @@ tfoot td {
       color: $danger;
     }
   }
+
+  /*
+   * An icon on its own has no edge, so a row of them reads as floating
+   * glyphs with no hint of where each tap lands. Giving them a box makes
+   * the target visible and equal — and :has() finds them without every
+   * template having to remember an extra class.
+   */
+  /*
+   * Boxed, not bare. A row of icon-and-word actions with no edges reads as
+   * loose text, and on a phone there is nothing to tell you where one tap
+   * target ends and the next begins.
+   */
+  border: 1px solid $line-2;
+  background: $surface;
+  box-shadow: $shadow-xs;
+  padding: 6px 10px;
+
+  &:hover:not(:disabled) {
+    border-color: rgba(53, 114, 196, 0.45);
+    background: rgba(53, 114, 196, 0.08);
+  }
+
+  &.danger {
+    border-color: rgba(179, 38, 30, 0.28);
+
+    &:hover:not(:disabled) {
+      border-color: rgba(179, 38, 30, 0.45);
+      background: $danger-tint;
+    }
+  }
+
+  /*
+   * There is deliberately no "icon-only becomes a square" rule here.
+   * :only-child counts element children and ignores text nodes, so a button
+   * holding <th-icon/> plus the word "Delete" matched it too, got forced to
+   * 32x32, and its label spilled across its neighbours. Padding sizes these
+   * to their content instead, which lands an icon-only button at roughly a
+   * square anyway.
+   */
+  min-height: 32px;
+
+  /*
+   * While this button's own request is in flight its icon is swapped for a
+   * spinner inside the same box, so the row does not resize and the person
+   * can see which of the three they pressed.
+   */
+  &.is-loading {
+    position: relative;
+    color: transparent;
+    pointer-events: none;
+
+    .ic,
+    th-icon {
+      visibility: hidden;
+    }
+
+    &::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 14px;
+      height: 14px;
+      margin: -7px 0 0 -7px;
+      border: 2px solid rgba(11, 18, 32, 0.18);
+      border-top-color: $navy-bright;
+      border-radius: 50%;
+      animation: spin 0.62s linear infinite;
+    }
+
+    &.danger::after {
+      border-top-color: $danger;
+    }
+  }
+}
+
+/* Boxed buttons sitting together need a gap, not a shared edge */
+.row-actions,
+.slot-links,
+.head-actions,
+.rcard-actions {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 6px;
 }
 
 // ---- Pills ----
@@ -687,11 +850,17 @@ tfoot td {
 //  Tables become cards on a phone
 //
 //  A table with six columns on a 380px screen is a sideways scroll and a
-//  guessing game. Below 760px each row is restacked as its own little card
+//  guessing game. Below 1024px each row is restacked as its own little card
 //  with the column name printed beside every value, so nothing has to be
 //  remembered from a header that has scrolled off.
+//
+//  1024 rather than 760: between those two widths the table technically fits
+//  but every cell wraps — a name breaks across two lines, an amount breaks
+//  between the "Rs." and the number, and the actions column gets pushed past
+//  the card's own edge. Cards are the better answer for the whole of that
+//  range, not just for phones.
 // ---------------------------------------------------------------
-@media (max-width: 760px) {
+@media (max-width: 1024px) {
   .table-wrap.stacked {
     border: none;
     border-radius: 0;
@@ -713,16 +882,35 @@ tfoot td {
       display: block;
     }
 
+    /*
+     * A faint wash rather than flat white. Stacked one under another, plain
+     * white cards on a near-white page lose their edges and read as one long
+     * block; a tint gives each row a boundary you can see without adding a
+     * heavier border.
+     */
     tbody tr,
     tfoot tr {
       display: block;
-      background: $surface;
-      border: 1px solid $line;
-      border-left-width: 3px;
+      background: linear-gradient(150deg, $navy-tint 0%, $surface 62%);
+      border: 1px solid $navy-tint-2;
+      border-left: 3px solid $navy-bright;
       border-radius: $radius-sm;
       padding: 11px 14px;
       margin-bottom: 10px;
       box-shadow: $shadow-xs;
+    }
+
+    /* Alternating hue so a long list does not become a stripe of one colour */
+    tbody tr:nth-child(even) {
+      background: linear-gradient(150deg, #f2edfb 0%, $surface 62%);
+      border-color: #ddd0f5;
+      border-left-color: $hall;
+    }
+
+    tfoot tr {
+      background: linear-gradient(150deg, #eef7f1 0%, $surface 62%);
+      border-color: #cfe8da;
+      border-left-color: $occupied;
     }
 
     tbody td,
@@ -758,7 +946,11 @@ tfoot td {
 
     .row-actions {
       justify-content: flex-end;
-      gap: 2px;
+      // 2px was set when these were bare text links sharing one row. Boxed,
+      // they need enough space that three of them do not read as one long
+      // segmented button.
+      gap: 7px;
+      flex-wrap: wrap;
       padding-top: 8px;
       margin-top: 4px;
       border-top: 1px solid $line;
@@ -832,14 +1024,14 @@ tfoot td {
   }
 
   .pane {
-    padding: 16px;
+    --pane-pad: 16px;
   }
 
-  // The band follows the pane's narrower padding, or it stops short of the
-  // edges and turns back into a box.
+  // The band follows the pane's padding on its own now, so only the vertical
+  // rhythm needs tightening here.
   .pane-head {
-    margin: -16px -16px 0;
-    padding: 13px 16px 12px;
+    padding-top: 13px;
+    padding-bottom: 12px;
   }
 
   .span-2 {
@@ -895,7 +1087,14 @@ tfoot td {
   display: flex;
   flex-direction: column;
   gap: 16px;
-  overflow: hidden;
+  /*
+   * Scroll rather than run off the screen. A first receipt carries three
+   * amounts, a total and a fee note, and on a short laptop screen that is
+   * taller than the viewport — with overflow hidden the buttons at the
+   * bottom simply could not be reached.
+   */
+  max-height: 88vh;
+  overflow-y: auto;
   animation: pop 0.28s $ease both;
 }
 
@@ -985,7 +1184,10 @@ tfoot td {
   .modal {
     max-width: none;
     border-radius: $radius-lg $radius-lg 0 0;
-    padding: 27px 18px calc(20px + env(safe-area-inset-bottom));
+    // No bottom padding of its own: the sticky action bar owns the bottom
+    // edge, and any padding under it is a strip where the field below shows
+    // through from under the bar.
+    padding: 27px 18px 0;
     max-height: 92dvh;
     overflow-y: auto;
     overscroll-behavior: contain;
@@ -1013,7 +1215,7 @@ tfoot td {
     bottom: 0;
     z-index: 2;
     margin-inline: -18px;
-    padding: 12px 18px 2px;
+    padding: 12px 18px calc(12px + env(safe-area-inset-bottom));
     background: $surface;
     box-shadow: 0 -1px 0 $line;
   }
@@ -1055,5 +1257,33 @@ tfoot td {
   from {
     opacity: 0;
     transform: translateY(28px);
+  }
+}
+
+// ---------------------------------------------------------------
+//  Very narrow phones
+//
+//  320px is still a real device, and at that width the page gutters and
+//  card padding together eat a quarter of the screen. Tightening both keeps
+//  the content readable instead of squeezed into a column.
+// ---------------------------------------------------------------
+@media (max-width: 380px) {
+  .page {
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+
+  .pane {
+    --pane-pad: 13px;
+  }
+
+  .pane-head h2 {
+    font-size: 15px;
+  }
+
+  // Header links drop under the heading rather than fighting it for the row
+  .head-links,
+  .head-tools {
+    width: 100%;
   }
 }

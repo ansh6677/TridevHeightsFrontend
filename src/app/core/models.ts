@@ -23,11 +23,14 @@ export function isHallRoom(name: string | null | undefined): boolean {
   return !!name && /^\s*(hall|living|lounge|common|drawing)/i.test(name);
 }
 
+export type FlatGender = 'BOYS' | 'GIRLS';
+
 export interface Flat {
   id: string;
   flatNo: string;
   floor?: string;
   notes?: string;
+  gender?: FlatGender;
   rooms: RoomSpec[];
 }
 
@@ -50,16 +53,19 @@ export interface DeskUser {
   role: number;
   roleLabel: string;
   active: boolean;
+  /** The protected login. Cannot be edited, deactivated or deleted. */
+  superAdmin: boolean;
 }
 
 export interface Occupant {
   id: string;
   name: string;
   email: string;
-  phone: string;
+  phone?: string;
   roomName: string;
   monthlyRent: number;
   securityDeposit?: number;
+  agreementCharge?: number;
   joinDate?: string;
   status: TenantStatus;
   paidThisMonth: boolean;
@@ -67,6 +73,25 @@ export interface Occupant {
   receiptNoThisMonth?: string;
   /** ISO instant, absent if no reminder has gone out for this month. */
   lastReminderAt?: string;
+
+  /** This tenant's own cycle for the current month, yyyy-MM-dd. */
+  dueDate?: string;
+  periodFrom?: string;
+  periodTo?: string;
+  /** Fee accrued so far, and rent plus that fee. */
+  lateFee?: number;
+  payableNow?: number;
+
+  /** True once a receipt has collected the deposit. It never goes back. */
+  depositCollected?: boolean;
+
+  /** Notice period, if one is running. */
+  noticeGivenOn?: string;
+  noticeEndsOn?: string;
+  onNotice?: boolean;
+  welcomeSentAt?: string;
+  securityDepositDue?: number;
+  agreementChargeDue?: number;
 }
 
 export interface FlatCard {
@@ -74,6 +99,7 @@ export interface FlatCard {
   flatNo: string;
   floor?: string;
   notes?: string;
+  gender?: FlatGender;
   rooms: RoomView[];
   totalSeats: number;
   filledSeats: number;
@@ -84,6 +110,10 @@ export interface FlatCard {
 }
 
 export interface Receipt {
+  /** Present on receipts that cover more than rent. */
+  rentAmount?: number;
+  depositAmount?: number;
+  agreementCharge?: number;
   id: string;
   receiptNo: string;
   tenantId: string;
@@ -101,7 +131,28 @@ export interface Receipt {
 }
 
 /** Must match Payers.ALL on the backend. */
-export const EXPENSE_PAYERS = ['Anshul', 'Atul', 'Prashant'] as const;
+export const PG_PAYER = 'Tridev Heights';
+export const PARTNER_PAYERS = ['Anshul', 'Atul', 'Prashant'] as const;
+export const EXPENSE_PAYERS = [PG_PAYER, ...PARTNER_PAYERS] as const;
+
+/** What the partners have spent personally, kept off the PG books. */
+export interface PartnerDashboard {
+  month: string;
+  monthLabel: string;
+  isCurrentMonth: boolean;
+  partners: {
+    name: string;
+    thisMonth: number;
+    allTime: number;
+    entriesThisMonth: number;
+    sharePercent: number;
+  }[];
+  spentThisMonth: number;
+  spentAllTime: number;
+  entriesThisMonth: number;
+  entries: Expense[];
+  months: { month: string; label: string; amount: number }[];
+}
 
 export interface Expense {
   id: string;
@@ -125,10 +176,29 @@ export interface PendingTenant {
   name: string;
   flatNo: string;
   roomName: string;
-  phone: string;
+  phone?: string;
   monthlyRent: number;
   /** ISO instant, absent if no reminder has gone out for this month. */
   lastReminderAt?: string;
+
+  /** This tenant's own cycle for the current month, yyyy-MM-dd. */
+  dueDate?: string;
+  periodFrom?: string;
+  periodTo?: string;
+  /** Fee accrued so far, and rent plus that fee. */
+  lateFee?: number;
+  payableNow?: number;
+
+  /** True once a receipt has collected the deposit. It never goes back. */
+  depositCollected?: boolean;
+
+  /** Notice period, if one is running. */
+  noticeGivenOn?: string;
+  noticeEndsOn?: string;
+  onNotice?: boolean;
+  welcomeSentAt?: string;
+  securityDepositDue?: number;
+  agreementChargeDue?: number;
 }
 
 export interface ReminderResult {
@@ -152,6 +222,12 @@ export interface DashboardSummary {
   monthLabel: string;
   isCurrentMonth: boolean;
   totalCollected: number;
+  depositsThisMonth: number;
+  totalDeposits: number;
+  agreementThisMonth: number;
+  totalAgreement: number;
+  receivedThisMonth: number;
+  totalReceived: number;
   totalExpense: number;
   netBalance: number;
   expectedThisMonth: number;

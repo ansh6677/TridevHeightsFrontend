@@ -1,7 +1,8 @@
-<div class="page">
   @if (toast(); as t) {
-    <div class="toast" [class.bad]="t.bad" role="status">{{ t.text }}</div>
-  }
+  <div class="toast" [class.bad]="t.bad" role="status" title="Tap to dismiss"
+     (click)="toast.set(null)">{{ t.text }}</div>
+}
+<div class="page">
 
   <div class="page-head">
     <div>
@@ -72,20 +73,28 @@
                   </span>
                 </td>
                 <td class="row-actions">
-                  <button type="button" class="link" title="Edit this login"
-                          (click)="openEdit(u)">
-                    <th-icon name="edit" />
-                    Edit
-                  </button>
-                  <button type="button" class="link" (click)="toggleActive(u)">
-                    <th-icon [name]="u.active ? 'close' : 'check'" />
-                    {{ u.active ? 'Deactivate' : 'Reactivate' }}
-                  </button>
-                  <button type="button" class="link danger" title="Delete this login"
-                          (click)="remove(u)">
-                    <th-icon name="trash" />
-                    Delete
-                  </button>
+                  @if (u.superAdmin) {
+                    <span class="muted small">Protected</span>
+                  } @else {
+                    <button type="button" class="link" title="Edit this login"
+                            (click)="openEdit(u)">
+                      <th-icon name="edit" />
+                      Edit
+                    </button>
+                    <button type="button" class="link" [disabled]="pending() !== null"
+                      [class.is-loading]="pending() === 'active:' + u.id"
+                      (click)="toggleActive(u)">
+                      <th-icon [name]="u.active ? 'close' : 'check'" />
+                      {{ u.active ? 'Deactivate' : 'Reactivate' }}
+                    </button>
+                    <button type="button" class="link danger" title="Delete this login"
+                            [disabled]="pending() !== null"
+                      [class.is-loading]="pending() === 'delete:' + u.id"
+                      (click)="remove(u)">
+                      <th-icon name="trash" />
+                      Delete
+                    </button>
+                  }
                 </td>
               </tr>
             }
@@ -146,7 +155,7 @@
       }
 
       <div class="actions">
-        <button type="button" class="btn btn-primary" [disabled]="busy()" (click)="save()">
+        <button type="button" class="btn btn-primary" [disabled]="busy()" [class.is-loading]="busy()" (click)="save()">
           {{ busy() ? 'Saving…' : editing() ? 'Save changes' : 'Add login' }}
         </button>
         <button type="button" class="btn btn-ghost" (click)="close()">Cancel</button>

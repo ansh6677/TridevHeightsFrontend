@@ -12,7 +12,23 @@ export function downloadCsv(fileName: string, headers: string[], rows: unknown[]
     return `"${text.replace(/"/g, '""')}"`;
   };
 
-  const csv = [headers, ...rows]
+  /**
+   * Every row gets exactly as many cells as there are headers.
+   *
+   * A short row is what makes a spreadsheet look like it lost columns: the
+   * trailing values simply are not there, so Excel stops the table early and
+   * later rows appear shifted. Padding to the header count keeps the grid
+   * rectangular no matter how much of the data is missing.
+   */
+  const squared = (line: unknown[]): unknown[] => {
+    const out = line.slice(0, headers.length);
+    while (out.length < headers.length) {
+      out.push('');
+    }
+    return out;
+  };
+
+  const csv = [headers, ...rows.map(squared)]
     .map((line) => line.map(escape).join(','))
     .join('\r\n');
 

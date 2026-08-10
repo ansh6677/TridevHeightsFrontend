@@ -121,7 +121,7 @@
     <!-- This month -->
     <section class="grid">
       <div class="card kpi tone-green">
-        <span class="kpi-label">Collected {{ periodLabel() }}</span>
+        <span class="kpi-label">Rent collected {{ periodLabel() }}</span>
         <span class="kpi-value good">Rs. {{ d.collectedThisMonth | number: '1.0-0' }}</span>
         <span class="kpi-foot">
           of Rs. {{ d.expectedThisMonth | number: '1.0-0' }} expected
@@ -176,7 +176,15 @@
             </span>
           }
         </span>
-      </div>
+              <span class="kpi-foot">
+          Rs. {{ d.receivedThisMonth | number: '1.0-0' }} in
+          @if (d.depositsThisMonth + d.agreementThisMonth > 0) {
+            (incl. Rs. {{ d.depositsThisMonth + d.agreementThisMonth | number: '1.0-0' }}
+            deposits &amp; charges)
+          }
+          &minus; Rs. {{ d.expenseThisMonth | number: '1.0-0' }} out
+        </span>
+</div>
     </section>
 
     <!-- Vacancy — the money not being earned -->
@@ -309,8 +317,18 @@
     <!-- All time -->
     <section class="grid">
       <div class="card kpi small-kpi tone-green">
-        <span class="kpi-label">Total collected</span>
+        <span class="kpi-label">Total rent collected</span>
         <span class="kpi-value good">Rs. {{ d.totalCollected | number: '1.0-0' }}</span>
+      </div>
+      <div class="card kpi small-kpi tone-navy">
+        <span class="kpi-label">Deposits held</span>
+        <span class="kpi-value">Rs. {{ d.totalDeposits | number: '1.0-0' }}</span>
+        <span class="kpi-foot">refundable &mdash; owed back to tenants</span>
+      </div>
+      <div class="card kpi small-kpi tone-gold">
+        <span class="kpi-label">Agreement charges</span>
+        <span class="kpi-value">Rs. {{ d.totalAgreement | number: '1.0-0' }}</span>
+        <span class="kpi-foot">non-refundable &mdash; yours to keep</span>
       </div>
       <div class="card kpi small-kpi tone-red">
         <span class="kpi-label">Total expenses</span>
@@ -364,8 +382,11 @@
                   <div>
                     <strong>{{ t.name }}</strong>
                     <span class="muted small">
-                      {{ t.flatNo }} / {{ t.roomName }} ·
-                      <a class="tel" [href]="'tel:' + t.phone">{{ t.phone }}</a>
+                      {{ t.flatNo }} / {{ t.roomName }}
+                      @if (t.phone) {
+                        ·
+                        <a class="tel" [href]="'tel:' + t.phone">{{ t.phone }}</a>
+                      }
                     </span>
                   </div>
                   <span class="amt">Rs. {{ t.monthlyRent | number: '1.0-0' }}</span>
@@ -494,7 +515,7 @@
 
       <div class="actions">
         @if (!remindDone()) {
-          <button type="button" class="btn btn-gold" [disabled]="reminding()"
+          <button type="button" class="btn btn-gold" [disabled]="reminding()" [class.is-loading]="reminding()"
                   (click)="sendReminders()">
             <th-icon name="mail" />
             {{ reminding() ? 'Sending…' : 'Send reminder' }}
