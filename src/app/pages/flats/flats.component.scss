@@ -379,6 +379,21 @@
   background: linear-gradient(180deg, #e0d1fb 0%, #eee5ff 100%);
 }
 
+/*
+ * A group with a bed free. The template has been setting this class all
+ * along — `[class.group-open]="g.vacant > 0"` — and nothing was drawing it,
+ * so the one thing this screen exists to show had to be read off a pill.
+ *
+ * Only the rail and the border change: the band underneath still says
+ * whether it is a bedroom or the hall. It sits after .group-hall on purpose,
+ * because at equal specificity the last rule wins and free beds outrank
+ * which room they are in.
+ */
+.group-open {
+  border-color: $vacant-line;
+  border-left-color: $vacant;
+}
+
 // Grid, not wrap: the tag and the count belong on the same line whatever
 // the card width, with the description dropping underneath them.
 .group-head {

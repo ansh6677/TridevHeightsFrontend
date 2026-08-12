@@ -1,4 +1,4 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, DestroyRef, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ApiService } from '../../core/api.service';
@@ -7,6 +7,9 @@ import { csvName, downloadCsv } from '../../core/csv';
 import { errorText } from '../../core/error-text';
 import { PartnerDashboard } from '../../core/models';
 import { IconComponent } from '../../shared/icon.component';
+
+/** One column of the month-by-month chart. */
+type PartnerMonth = PartnerDashboard['months'][number];
 
 @Component({
   selector: 'th-partners',
@@ -30,12 +33,23 @@ export class PartnersComponent {
     Math.max(1, ...(this.data()?.months ?? []).map((m) => Number(m.amount)))
   );
 
+  /** The month the pointer or finger is on, read out above the chart. */
+  readonly hovered = signal<PartnerMonth | null>(null);
+
+  private toastTimer?: ReturnType<typeof setTimeout>;
+
   constructor() {
     this.load();
+
+    // Without this the timer from a dismissed screen still fires, and Angular
+    // is asked to update a signal on a component that is no longer there.
+    inject(DestroyRef).onDestroy(() => clearTimeout(this.toastTimer));
   }
 
   async load(): Promise<void> {
     this.loading.set(true);
+    // The months about to be replaced are the ones the readout is pointing at.
+    this.hovered.set(null);
     try {
       this.data.set(await this.api.partnerExpenses(this.month(), this.span()));
     } catch (e) {
@@ -78,7 +92,10 @@ export class PartnersComponent {
   }
 
   private say(text: string, bad = false): void {
+    // The previous timer is cleared first: two messages in a row used to
+    // share the first one's countdown, so the second flashed and vanished.
+    clearTimeout(this.toastTimer);
     this.toast.set({ text, bad });
-    setTimeout(() => this.toast.set(null), 5000);
+    this.toastTimer = setTimeout(() => this.toast.set(null), 5000);
   }
 }

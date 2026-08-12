@@ -82,52 +82,10 @@
   transition: width 0.5s $ease;
 }
 
-// ---------------------------------------------------------------
-//  Totals
-//
-//  The .kpi styling lives inside the dashboard component and is scoped to
-//  it, so the same class names do nothing here — the label, figure and note
-//  all ran together on one line. Defined locally rather than lifted into the
-//  shared sheet, which would risk shifting the dashboard's own cards.
-// ---------------------------------------------------------------
-.kpi {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-  padding: 16px 18px;
-}
-
-.kpi-label {
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.07em;
-  text-transform: uppercase;
-  color: $muted;
-}
-
-.kpi-value {
-  font-family: $font-heading;
-  font-size: 24px;
-  font-weight: 600;
-  color: $ink;
-  font-variant-numeric: tabular-nums;
-  line-height: 1.15;
-}
-
-.kpi-foot {
-  font-size: 12px;
-  color: $muted;
-}
-
-.tone-navy {
-  border-color: $navy-tint-2;
-  background: linear-gradient(135deg, $navy-tint 0%, $surface 62%);
-}
-
-.tone-gold {
-  border-color: rgba(232, 166, 61, 0.35);
-  background: linear-gradient(135deg, $gold-tint 0%, $surface 62%);
-}
+// The totals cards use .kpi / .kpi-label / .kpi-value / .kpi-foot and the
+// tones, all of which now live in styles/_page.scss. This screen used to
+// carry a flattened copy of them, which is why the same card looked like a
+// different card here than on the dashboard.
 
 // ---------------------------------------------------------------
 //  Trend
@@ -135,34 +93,67 @@
 .bars {
   display: grid;
   grid-auto-flow: column;
-  grid-auto-columns: minmax(34px, 1fr);
+  // A floor of 44px, so twelve months scroll sideways inside .chart-scroll
+  // rather than each becoming a 20px sliver nobody can aim at.
+  grid-auto-columns: minmax(44px, 1fr);
   align-items: end;
   gap: 10px;
-  height: 170px;
   padding-top: 6px;
+  min-width: 100%;
 }
 
+// A button, not a div: every month is something you point at to read its
+// figure, which makes it reachable by keyboard and announced by a reader.
 .bar-col {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: flex-end;
   gap: 7px;
-  height: 100%;
   min-width: 0;
+  padding: 6px 2px 4px;
+  border: none;
+  border-radius: $radius-sm;
+  background: transparent;
+  font-family: $font-body;
+  cursor: pointer;
+  scroll-snap-align: center;
+  transition: background $speed $ease;
+
+  &:hover,
+  &.on {
+    background: rgba(53, 114, 196, 0.06);
+  }
+
+  &:focus-visible {
+    outline: 2px solid $navy;
+    outline-offset: 1px;
+  }
+}
+
+// The bar's own track. The height lives here rather than on .bars so the
+// label underneath never eats into the drawing area.
+.bar-slot {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  width: 100%;
+  height: 150px;
 }
 
 .bar {
   width: 100%;
-  max-width: 46px;
+  max-width: 40px;
   // A month with nothing spent still needs to be visible as a month
   min-height: 3px;
   border-radius: 6px 6px 3px 3px;
   background: $grad-primary;
+  transition: height 0.55s $ease;
 }
 
 .bar-lbl {
   font-size: 10.5px;
+  font-weight: 600;
   color: $muted;
   white-space: nowrap;
 }
@@ -200,8 +191,15 @@ tfoot td {
 }
 
 @media (max-width: 700px) {
+  .bar-slot {
+    height: 120px;
+  }
+
+  // Narrower columns, so the six months anyone actually looks at still fit
+  // a 320px screen without being scrolled to. Twelve months still overflow,
+  // and still scroll — which is the right answer for twelve.
   .bars {
-    height: 140px;
+    grid-auto-columns: minmax(34px, 1fr);
     gap: 6px;
   }
 
@@ -210,10 +208,14 @@ tfoot td {
   }
 }
 
-// The span switcher is styled globally, but its tap height is set on the
-// dashboard's own copy — without repeating it here these come out at 21px,
-// which is a target you aim at rather than tap.
-.spans button {
-  min-height: 34px;
-  padding-inline: 12px;
+// Nothing lifts towards a pointer that is not there, and a tap was leaving
+// the highlight behind on whichever month was touched last.
+@media (hover: none) {
+  .bar-col:hover:not(.on) {
+    background: transparent;
+  }
 }
+
+// The range switch is styled in styles/_page.scss, so this screen and the
+// dashboard get the same control. The local patch that used to sit here only
+// set a tap height, which left the switch looking like three bare buttons.

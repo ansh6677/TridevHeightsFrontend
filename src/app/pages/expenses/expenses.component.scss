@@ -81,7 +81,18 @@ td.out {
   border-radius: $radius-sm;
 }
 
-@media (max-width: 900px) {
+/*
+ * 1120px, not 900px.
+ *
+ * Amount, Paid by, Date and the button hold 516px between them whatever the
+ * screen, so the remark — the only field with words in it — gets whatever is
+ * left. With the sidebar open on a 1024px tablet that left 133px, and at
+ * 901px it left 16px: a field you cannot read what you typed into.
+ *
+ * The two-column form below was already the answer; it just started 200px
+ * too late. Measured, not guessed: at 1120px the remark is back over 220px.
+ */
+@media (max-width: 1120px) {
   .quick {
     grid-template-columns: 1fr 1fr;
 
@@ -93,7 +104,9 @@ td.out {
       grid-column: span 2;
     }
   }
+}
 
+@media (max-width: 900px) {
   .filters {
     grid-template-columns: 1fr 1fr;
   }

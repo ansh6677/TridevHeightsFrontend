@@ -88,19 +88,48 @@
         <h2>Month by month</h2>
         <div class="spans" role="group" aria-label="How far back to look">
           @for (n of [3, 6, 12]; track n) {
-            <button type="button" [class.on]="span() === n" (click)="setSpan(n)">{{ n }}m</button>
+            <button type="button" [class.on]="span() === n" (click)="setSpan(n)"
+                    [attr.aria-pressed]="span() === n"
+                    [attr.aria-label]="'Show the last ' + n + ' months'"
+                    [attr.title]="'Last ' + n + ' months'">{{ n }}m</button>
           }
         </div>
       </div>
 
-      <div class="bars">
-        @for (m of d.months; track m.month) {
-          <div class="bar-col" [title]="m.label + ' · Rs. ' + m.amount">
-            <div class="bar" [style.height.%]="barHeight(m.amount)"></div>
-            <span class="bar-lbl">{{ m.label }}</span>
-          </div>
+      <!-- Point at a month and it reads out here. A title tooltip needs a
+           steady hand and never appears at all on a phone. -->
+      <div class="readout" [class.live]="hovered() !== null">
+        @if (hovered(); as h) {
+          <strong>{{ h.label }}</strong>
+          <span class="ro out">Rs. {{ h.amount | number: '1.0-0' }}</span>
+          <span class="muted small">
+            {{ h.amount === 0 ? 'nothing spent personally' : 'spent personally' }}
+          </span>
+        } @else {
+          <span class="muted small">Tap a month to see what was spent.</span>
         }
       </div>
+
+      @if (d.months.length === 0) {
+        <div class="empty"><p>No months to chart yet.</p></div>
+      } @else {
+        <div class="chart-scroll">
+          <div class="bars">
+            @for (m of d.months; track m.month) {
+              <button type="button" class="bar-col" [class.on]="hovered()?.month === m.month"
+                      (mouseenter)="hovered.set(m)" (mouseleave)="hovered.set(null)"
+                      (focus)="hovered.set(m)" (blur)="hovered.set(null)"
+                      (click)="hovered.set(m)"
+                      [attr.aria-label]="m.label + ': Rs. ' + m.amount + ' spent personally'">
+                <span class="bar-slot">
+                  <span class="bar" [style.height.%]="barHeight(m.amount)"></span>
+                </span>
+                <span class="bar-lbl">{{ m.label }}</span>
+              </button>
+            }
+          </div>
+        </div>
+      }
     </section>
 
     <!-- Every entry for the month -->

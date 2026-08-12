@@ -243,7 +243,12 @@
         </h2>
         <div class="spans" role="group" aria-label="How far back the chart goes">
           @for (n of [3, 6, 12]; track n) {
-            <button type="button" [class.on]="span() === n" (click)="setSpan(n)">{{ n }}m</button>
+            <!-- aria-pressed, not just a class: the selected range is the only
+                 thing this control says, and a class says nothing out loud. -->
+            <button type="button" [class.on]="span() === n" (click)="setSpan(n)"
+                    [attr.aria-pressed]="span() === n"
+                    [attr.aria-label]="'Show the last ' + n + ' months'"
+                    [attr.title]="'Last ' + n + ' months'">{{ n }}m</button>
           }
         </div>
         <div class="legend">

@@ -208,6 +208,273 @@
   }
 }
 
+// ---------------------------------------------------------------
+//  KPI card — one figure, what it is, and a note under it
+//
+//  The dashboard and the partner screen both use these class names. The
+//  partner screen had to declare its own flattened copy because the real
+//  ones were locked inside dashboard.component.scss, so the same card came
+//  out with no coloured spine, no wash and a different figure size on the
+//  two screens. One definition, one card.
+//
+//  Each tone carries a rail and a wash of the same colour, so the figure
+//  sits on a card that is already the right colour before you have read it.
+// ---------------------------------------------------------------
+.kpi {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 18px 20px 18px 23px;
+  overflow: hidden;
+  min-width: 0;
+  transition: transform $speed $ease, box-shadow $speed $ease;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: $shadow-md;
+  }
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 4px;
+    background: transparent;
+  }
+
+  &.tone-green {
+    border-color: $occupied-line;
+    background: linear-gradient(120deg, $occupied-tint 0%, rgba(255, 255, 255, 0) 66%), $surface;
+
+    &::before {
+      background: $grad-green;
+    }
+  }
+
+  &.tone-red {
+    border-color: $due-line;
+    background: linear-gradient(120deg, $due-tint 0%, rgba(255, 255, 255, 0) 66%), $surface;
+
+    &::before {
+      background: $grad-red;
+    }
+  }
+
+  &.tone-navy {
+    border-color: rgba(28, 63, 110, 0.18);
+    background: linear-gradient(120deg, $navy-tint 0%, rgba(255, 255, 255, 0) 66%), $surface;
+
+    &::before {
+      background: $grad-primary;
+    }
+  }
+
+  // Money kept reads gold, the colour this app already uses for anything held.
+  &.tone-gold {
+    border-color: rgba(232, 166, 61, 0.35);
+    background: linear-gradient(120deg, $gold-tint 0%, rgba(255, 255, 255, 0) 66%), $surface;
+
+    &::before {
+      background: $grad-gold;
+    }
+  }
+}
+
+.kpi-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: $muted;
+}
+
+.kpi-value {
+  font-family: $font-heading;
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  color: $ink;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.15;
+  // A figure long enough to need it wraps rather than widening the card.
+  overflow-wrap: anywhere;
+
+  &.good {
+    color: $occupied;
+  }
+
+  &.bad {
+    color: $due;
+  }
+}
+
+.kpi-foot {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 7px;
+  font-size: 12.5px;
+  color: $muted;
+}
+
+// A supporting figure rather than the headline one.
+.small-kpi .kpi-value {
+  font-size: 20px;
+}
+
+// ---------------------------------------------------------------
+//  Segmented switch — the 3m / 6m / 12m range control
+//
+//  This lived in dashboard.component.scss. Angular's emulated encapsulation
+//  scopes a component's stylesheet to that component's own markup, so the
+//  identical switch on the partner screen was rendering as three bare
+//  browser buttons with no way to see which range was selected. Anything
+//  two screens share has to be here.
+// ---------------------------------------------------------------
+.spans {
+  display: inline-flex;
+  align-items: center;
+  flex: none;
+  gap: 2px;
+  padding: 3px;
+  border-radius: $radius-pill;
+  background: $surface-3;
+  border: 1px solid $line;
+  box-shadow: inset 0 1px 2px rgba(11, 18, 32, 0.05);
+  // The switch shrinks itself rather than being the thing that pushes a
+  // card wider than a 320px phone.
+  max-width: 100%;
+
+  button {
+    flex: 0 1 auto;
+    min-width: 0;
+    // 34px so a thumb can hit it; anything under about 30 is a target you
+    // aim at rather than tap. It goes up again on a touch screen below.
+    min-height: 34px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-family: $font-body;
+    font-size: 13px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+    letter-spacing: -0.01em;
+    color: $muted;
+    background: transparent;
+    border: none;
+    border-radius: $radius-pill;
+    padding: 7px 15px;
+    cursor: pointer;
+    white-space: nowrap;
+    -webkit-tap-highlight-color: transparent;
+    // Colour and shadow only. The selected pill is not animated by moving
+    // anything, so there is nothing here that can force a reflow mid-tap.
+    transition: background $speed $ease, color $speed $ease, box-shadow $speed $ease,
+      transform $speed-fast $ease;
+
+    &:hover:not(.on) {
+      color: $navy;
+      background: rgba(255, 255, 255, 0.72);
+    }
+
+    // The press reads on a touch screen, where there is no hover to read.
+    &:active:not(.on) {
+      transform: scale(0.95);
+    }
+
+    &.on {
+      color: $navy;
+      background: $surface;
+      box-shadow: 0 1px 2px rgba(11, 18, 32, 0.09), 0 2px 6px rgba(11, 18, 32, 0.07);
+    }
+
+    &:focus-visible {
+      outline: none;
+      box-shadow: $ring;
+    }
+  }
+}
+
+// ---------------------------------------------------------------
+//  Chart primitives — shared by the dashboard chart and the partner one
+//
+//  A readout beats a tooltip: it does not need a steady hand, it works the
+//  same way under a thumb as under a mouse, and it does not vanish the
+//  moment you move to read it.
+// ---------------------------------------------------------------
+.readout {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+  min-height: 34px;
+  padding: 7px 13px;
+  border-radius: $radius-sm;
+  border: 1px dashed $line;
+  background: rgba(11, 18, 32, 0.02);
+  font-size: 13px;
+  transition: border-color $speed $ease, background $speed $ease;
+
+  strong {
+    font-family: $font-heading;
+    font-size: 13.5px;
+  }
+
+  &.live {
+    border-style: solid;
+    border-color: rgba(53, 114, 196, 0.2);
+    background: $navy-tint;
+  }
+}
+
+.ro {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+
+  &.in {
+    color: $occupied;
+  }
+
+  &.out {
+    color: $due;
+  }
+
+  &.net {
+    color: $navy;
+
+    &.neg {
+      color: $due;
+    }
+  }
+}
+
+// On a narrow screen twelve months will not fit; let the chart scroll
+// rather than crushing the bars into slivers.
+.chart-scroll {
+  overflow-x: auto;
+  // Sideways inside the card only. Without this the chart hands the gesture
+  // to the page once it reaches its end, and the whole screen slides.
+  overscroll-behavior-x: contain;
+  // Room for the focus ring on the first and last column.
+  margin: 0 -4px;
+  padding: 0 4px;
+  scrollbar-width: thin;
+}
+
+// Twelve months will not fit on a phone, so the chart keeps its sideways
+// scroll — sideways does not fight the thumb's up-and-down — and each
+// column settles under the finger instead of stopping mid-bar.
+@media (max-width: 620px) {
+  .chart-scroll {
+    scroll-snap-type: x proximity;
+  }
+}
+
 .grid {
   display: grid;
   /*
@@ -489,6 +756,14 @@ tfoot td {
 
 .muted {
   color: $muted;
+}
+
+// The second line of a pair — a count under a name, a note under a figure.
+// It was declared four times over in four component stylesheets, which meant
+// the two screens that did not declare it (partners, flats) printed those
+// notes at full body size.
+.small {
+  font-size: 12.5px;
 }
 
 .mono {
@@ -1094,6 +1369,11 @@ tfoot td {
    * bottom simply could not be reached.
    */
   max-height: 88vh;
+  // dvh, not vh: on a tablet the address bar collapses and comes back, and
+  // vh is measured against the tallest the viewport ever gets. The sheet
+  // was ending up taller than the screen showing it, with the buttons
+  // underneath the browser's own chrome. vh above stays as the fallback.
+  max-height: 88dvh;
   overflow-y: auto;
   animation: pop 0.28s $ease both;
 }
@@ -1246,10 +1526,36 @@ tfoot td {
     height: 42px;
   }
 
+  /*
+   * A blur across the whole screen is the most expensive thing a phone can
+   * be asked to paint, and it is being asked while the sheet is sliding up
+   * over it — which is where the stutter on opening a form came from. The
+   * layer goes a little darker instead, so the page behind is still clearly
+   * out of reach.
+   */
+  .backdrop {
+    backdrop-filter: none;
+    background: rgba(7, 13, 24, 0.62);
+  }
+
   // Nothing lifts towards a pointer that is not there — and a tap was
   // leaving the lift behind.
   .chip:hover {
     transform: none;
+  }
+
+  // The range switch is the one control on the chart card, and on a phone
+  // it is the one being tapped hardest.
+  .spans button {
+    min-height: 40px;
+    padding-inline: 17px;
+  }
+
+  // Nothing lifts towards a pointer that is not there, and a tap was
+  // leaving the card lifted behind it.
+  .kpi:hover {
+    transform: none;
+    box-shadow: $shadow-sm;
   }
 }
 
@@ -1285,5 +1591,11 @@ tfoot td {
   .head-links,
   .head-tools {
     width: 100%;
+  }
+
+  // Three ranges still fit beside a heading at 320px, just barely, and only
+  // if they stop asking for the padding a wider screen gives them.
+  .spans button {
+    padding-inline: 12px;
   }
 }
