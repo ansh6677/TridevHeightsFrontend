@@ -141,15 +141,23 @@ const RAIL_KEY = 'th-pms-rail';
           <span class="whoami">
             <span class="avatar">{{ initial() }}</span>
             <span class="whotext">
-              {{ auth.name() }}
+              <span class="whoname">{{ auth.name() }}</span>
               <em [class.viewer]="!auth.isAdmin()">{{ auth.roleLabel() }}</em>
-              @if (auth.lastLoginLabel(); as seen) {
-                <em class="seen">
-                  Last used {{ seen }}@if (auth.lastLoginBy(); as who) { · {{ who }}}
-                </em>
-              }
             </span>
           </span>
+
+          <!-- Its own row rather than a third line beside the avatar: the
+               date and the name together are wider than what a 236px sidebar
+               leaves next to a 30px circle, and the half that got cut off
+               was the name. -->
+          @if (auth.lastLoginLabel(); as seen) {
+            <span class="seen-row">
+              <em>Last used</em>
+              <span
+                >{{ seen }}@if (auth.lastLoginBy(); as who) { · {{ who }}}</span
+              >
+            </span>
+          }
           <button type="button" class="out" title="Sign out" (click)="signOut()">
             <svg viewBox="0 0 20 20" width="15" height="15" aria-hidden="true">
               <path d="M8 3H4v14h4M13 7l3 3-3 3M16 10H8" fill="none" stroke="currentColor"
@@ -408,6 +416,10 @@ const RAIL_KEY = 'th-pms-rail';
         background: rgba(255, 255, 255, 0.07);
         border: 1px solid rgba(255, 255, 255, 0.11);
         white-space: nowrap;
+        // A long name shortens the card instead of pushing the bar wider
+        // than the phone, which is what starts a page scrolling sideways.
+        min-width: 0;
+        max-width: 100%;
 
         svg {
           flex: none;
@@ -419,6 +431,7 @@ const RAIL_KEY = 'th-pms-rail';
         display: flex;
         flex-direction: column;
         line-height: 1.15;
+        min-width: 0;
       }
 
       .seen-text em {
@@ -433,14 +446,8 @@ const RAIL_KEY = 'th-pms-rail';
       .seen-text b {
         font-size: 11.5px;
         font-weight: 600;
-      }
-
-      .whotext .seen {
-        color: rgba(255, 255, 255, 0.5);
-        font-size: 10.5px;
-        font-weight: 500;
-        letter-spacing: 0;
-        text-transform: none;
+        overflow: hidden;
+        text-overflow: ellipsis;
       }
 
       .who {
@@ -479,8 +486,38 @@ const RAIL_KEY = 'th-pms-rail';
           font-size: 12.5px;
           color: $muted-light;
           white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
+
+          // The trimming has to be on each line, not on the column: text
+          // overflows the box that holds the text, and here that is the
+          // line, not .whotext. On the column it only ever clipped.
+          > * {
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+          }
+        }
+
+        // Full sidebar width and free to wrap onto a second line, because
+        // "Last used 12 Aug, 3:04 pm · Ananya Sharma" is longer than any
+        // sidebar and the tail of it is the part worth reading.
+        .seen-row {
+          display: flex;
+          flex-direction: column;
+          gap: 1px;
+          min-width: 0;
+
+          em {
+            font-size: 9px;
+            letter-spacing: 0.07em;
+            color: rgba(255, 255, 255, 0.45);
+          }
+
+          span {
+            font-size: 11px;
+            line-height: 1.35;
+            color: rgba(255, 255, 255, 0.66);
+            overflow-wrap: anywhere;
+          }
         }
 
         em {
@@ -529,7 +566,8 @@ const RAIL_KEY = 'th-pms-rail';
 
         .brand span,
         .label,
-        .whotext {
+        .whotext,
+        .seen-row {
           display: none;
         }
 
@@ -704,7 +742,8 @@ const RAIL_KEY = 'th-pms-rail';
         // Inside the drawer the full labels always come back.
         .rail .brand span,
         .rail .label,
-        .rail .whotext {
+        .rail .whotext,
+        .rail .seen-row {
           display: flex;
         }
 
